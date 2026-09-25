@@ -1,0 +1,45 @@
+# ------------------------------------------------------------
+# 换行符策略 —— 这不是洁癖，是踩过的坑。
+#
+# 本仓库当前没有 .sh 文件（上游 LightRAG 的 24 个 .sh 在 LightRAG/ 下，
+# 已被 .gitignore 排除），那批文件的 CRLF 由 scripts/build-image.ps1 在
+# 构建前统一转 LF 兜住 —— 症状是容器报
+#   exec /usr/local/bin/docker-entrypoint.sh: no such file or directory
+#   Status=restarting ExitCode=255
+# 根因是 core.autocrlf=true 把 shebang 变成 `#!/bin/sh\r`。
+#
+# 这里锁住的是本仓库自己的文件，重点是 deploy/Dockerfile.lightrag：
+# 它含大量 `RUN ... \` 续行，一旦被转成 CRLF，`\` 后面跟一个 \r，
+# 续行行为就不可靠了。
+#
+# `text=auto eol=lf` 让所有文本文件入库与检出都是 LF，
+# 不依赖协作者的本地 autocrlf 设置。
+# ------------------------------------------------------------
+* text=auto eol=lf
+
+*.sh    text eol=lf
+*.py    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.sql   text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+Dockerfile* text eol=lf
+
+# PowerShell / 批处理按 Windows 惯例保持 CRLF
+*.ps1   text eol=crlf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# ------------------------------------------------------------
+# 二进制（禁止 diff / 换行转换）
+# ------------------------------------------------------------
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.docx  binary
+*.tgz   binary

@@ -1,0 +1,21 @@
+{
+  "format": "1999rag-corpus-lock-v1",
+  "purpose": "锁定语料版本。索引的每次发布都对应这里记录的一个 commit，回滚时按它重新 checkout。",
+  "repo": "https://github.com/VioletWilde/Reverse1999-Story-Compendium",
+  "local_path": "corpus/Reverse1999-Story-Compendium",
+  "commit": "f6e18439f0aae81d74c3d9a8a9a80b7bcae53c08",
+  "commit_short": "f6e18439",
+  "describe": "v1.2.0-1-gf6e18439",
+  "tags": ["v1.0.0", "v1.0.1", "v1.1.0", "v1.2.0"],
+  "lang_used": "zh-CN",
+  "source_dir": "readable/story_reader_linked/zh-CN",
+  "chapters": 81,
+  "breakdown": {
+    "mainline": 16,
+    "activity": 23,
+    "character": 20,
+    "anecdote": 22
+  },
+  "corpus_bytes": 10066432,
+  "note": "语料是第三方版权内容，独立 clone 且被 .gitignore 排除；本文件只锁版本，不含原文。"
+}

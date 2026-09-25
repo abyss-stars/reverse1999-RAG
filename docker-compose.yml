@@ -1,0 +1,97 @@
+# ============================================================
+#  《重返未来：1999》剧情 RAG  ——  Docker 编排
+#
+#  启动:  docker compose up -d
+#  重建:  docker compose up -d --build
+#  停止:  docker compose down
+#  日志:  docker compose logs -f lightrag
+#
+#  说明:
+#   - 使用工作区根目录的 .env (compose 自动读取)
+#   - 数据全部落在 ./data/ 下, 与上游 LightRAG/ 源码目录解耦
+#   - 本机自用: 端口只绑 127.0.0.1; 上服务器时改 binds 并加 Nginx
+#   - 依赖前提前置: 已把 Docker Desktop 的 cli-plugins 注册进
+#     ~/.docker/config.json 的 cliPluginsExtraDirs, 否则 docker compose 不可用
+# ============================================================
+
+services:
+  # ----------------------------------------------------------
+  # PostgreSQL 18 + pgvector
+  # 一个实例承担 LightRAG 的四类存储: KV / 向量 / 图谱 / 文档状态
+  # ⚠️ LightRAG 加入文档后不能更换存储实现, 所以这一步必须一次定好
+  # ----------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg18
+    container_name: 1999rag-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lightrag}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?请在 .env 里设置 POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-rag}
+      # PG18 镜像的 PGDATA 是 /var/lib/postgresql/18/docker (不是 PG15 的 .../data)
+      PGDATA: /var/lib/postgresql/18/docker
+    volumes:
+      - ./data/pgdata:/var/lib/postgresql
+      - ./deploy/initdb:/docker-entrypoint-initdb.d:ro
+    ports:
+      # 宿主 5433 → 容器 5432, 避免与本机已有 PostgreSQL 冲突
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lightrag} -d ${POSTGRES_DATABASE:-rag}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # ----------------------------------------------------------
+  # LightRAG 检索内核
+  # ----------------------------------------------------------
+  lightrag:
+    # 镜像由 scripts/build-image.ps1 构建，不在这里 build。
+    # 原因: 上游 Dockerfile 首行的 `# syntax=docker/dockerfile:1` 会让 BuildKit
+    #       联网拉取 frontend 镜像, 而 BuildKit 不走 Docker Desktop 的代理配置,
+    #       必然超时。build-image.ps1 去掉该指令后用内建 frontend 构建。
+    image: lightrag-1999:local
+    container_name: 1999rag-lightrag
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "127.0.0.1:9621:9621"
+
+    volumes:
+      - ./data/rag_storage:/app/data/rag_storage
+      - ./data/inputs:/app/data/inputs
+      - ./data/prompts:/app/data/prompts
+      - ./data/ui_templates:/app/data/ui_templates:ro
+      - ./.env:/app/.env:ro
+
+    environment:
+      # 容器内路径 (覆盖 .env 里的宿主路径)
+      WORKING_DIR: /app/data/rag_storage
+      INPUT_DIR: /app/data/inputs
+      PROMPT_DIR: /app/data/prompts
+      UI_TEMPLATES_DIR: /app/data/ui_templates
+      HOST: "0.0.0.0"
+      PORT: "9621"
+      # 容器内连 postgres 用服务名, 覆盖 .env 里的 localhost
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    healthcheck:
+      # 镜像里没有 curl/wget（最终阶段只装了 gosu/libcairo2），
+      # 所以用容器自带的 python 探活。
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9621/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+volumes: {}

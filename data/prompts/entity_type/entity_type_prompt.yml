@@ -1,0 +1,116 @@
+### 1999RAG · 领域实体类型定义
+###
+### 用途: 由 .env 的 ENTITY_TYPE_PROMPT_FILE=entity_type_prompt.yml 加载,
+###       文件放在 PROMPT_DIR/entity_type/ 下 (即 data/prompts/entity_type/)。
+### 约束: ENTITY_EXTRACTION_USE_JSON=true, 因此必须包含 entity_extraction_json_examples。
+###
+### 设计理由: 《重返未来：1999》的语料里专名极密集 —— 角色名、组织名、自造术语、
+### 跨时代的真实地名与历史事件混杂。默认的通用实体类型 (Person/Concept/...) 会把
+### "重塑之手" 归到 Organization、"暴雨" 归到 Event 或 Concept 之间反复摇摆,
+### 导致同一实体被拆成多个节点。这里固定类型集合并给出领域解释来收敛它。
+
+entity_types_guidance: |
+  你正在处理《重返未来：1999》的剧情文本。请为每个实体从下列类型中选择最贴切的一个。
+  判断依据以"在剧情里它扮演什么角色"为准，不要按字面意思猜。
+
+  - Character: 有名字或固定称呼的角色，包括主角、配角、NPC、拟人化物件、组织首领。
+      例：维尔汀、十四行诗、苏芙比、APPLe、"小巨人"汤米、"南瓜头"詹姆、勿忘我。
+  - Organization: 组织、机构、团体、阵营、基金会、军队、公司。
+      例：圣洛夫基金会、曼纽斯·文蒂、重塑之手、芝诺、拉普拉斯。
+  - Location: 地理地点、城市、国家、建筑、区域、虚构场所。
+      例：雾都伦敦、维也纳、芝加哥、瓦尔登湖、基金会总部。
+  - Event: 发生过的具体事件、事故、行动、仪式、战役、案件。
+      例：暴雨、芝加哥营救、雷米特杯失窃案。
+  - Term: 世界观专有术语、能力、概念、称谓、学科、法术体系。
+      例：神秘学家、重塑、灵感、咒语升阶、克制关系、意识唤醒、理性。
+  - Item: 具体的道具、物品、武器、载具、文件、信物。
+      例：维尔汀的箱子、雷米特杯、手稿、怀表。
+  - TimePeriod: 明确指出的年代、时期、时代背景。
+      例：1929年、1966年、世纪末、维多利亚时代。
+  - Work: 剧情中被提及的具体作品 —— 书籍、诗歌、歌曲、电影、戏剧、画作。
+      例：《恶童坏种》、《老虎的金黄》、某首摇滚乐。
+  - Creature: 非人的生物、怪物、神话存在、动物。
+      例：魔精、蛇怪、神奇独角兽。
+  - Other: 以上都不合适时使用。
+
+  抽取要求：
+  1. 实体名用文本中的原样写法，不要翻译、不要改写、不要补全括号。
+  2. 描述用简体中文，一到两句，写清"它是什么"以及"剧情里它做了什么"。
+  3. 同一实体在不同章节的称呼若指向同一对象，用最完整、最常用的那个写法作为实体名。
+  4. 不要抽取纯路人（如"一名士兵"）、不要抽取章节标题、不要抽取泛称（如"人们"）。
+
+entity_extraction_examples:
+  - |
+    entity{tuple_delimiter}维尔汀{tuple_delimiter}Character{tuple_delimiter}玩家视角的主角，神秘学家，提着装有魔精的箱子在暴雨中穿行。
+    relation{tuple_delimiter}维尔汀{tuple_delimiter}圣洛夫基金会{tuple_delimiter}隶属,调查{tuple_delimiter}维尔汀以基金会调查员的身份行动。
+    {completion_delimiter}
+
+entity_extraction_json_examples:
+  - |
+    {
+      "entities": [
+        {
+          "name": "维尔汀",
+          "type": "Character",
+          "description": "玩家视角的主角，神秘学家，提着装有魔精的箱子在暴雨中穿行。"
+        },
+        {
+          "name": "圣洛夫基金会",
+          "type": "Organization",
+          "description": "维尔汀所属的调查机构，负责处理神秘学相关事件。"
+        },
+        {
+          "name": "暴雨",
+          "type": "Event",
+          "description": "反复降临的异常现象，会抹去一个时代并使时间倒退，是剧情的主线危机。"
+        },
+        {
+          "name": "神秘学家",
+          "type": "Term",
+          "description": "能够感知与使用神秘学力量的人类，在世界中处于被排斥的地位。"
+        }
+      ],
+      "relationships": [
+        {
+          "source": "维尔汀",
+          "target": "圣洛夫基金会",
+          "keywords": "隶属,调查",
+          "description": "维尔汀以基金会调查员的身份行动，接受其派遣执行任务。"
+        },
+        {
+          "source": "维尔汀",
+          "target": "暴雨",
+          "keywords": "经历,对抗",
+          "description": "维尔汀在暴雨中穿行，试图寻找暴雨的成因并阻止它。"
+        }
+      ]
+    }
+  - |
+    {
+      "entities": [
+        {
+          "name": "APPLe",
+          "type": "Character",
+          "description": "会说话的苹果，维尔汀的同伴，说话刻薄但可靠。"
+        },
+        {
+          "name": "\"小巨人\"汤米",
+          "type": "Character",
+          "description": "芝加哥街头的少年，起初想抢走维尔汀的箱子，后来成为同行者。"
+        }
+      ],
+      "relationships": [
+        {
+          "source": "APPLe",
+          "target": "维尔汀",
+          "keywords": "同伴",
+          "description": "APPLe 与维尔汀同行，在对话中提供吐槽与提示。"
+        },
+        {
+          "source": "\"小巨人\"汤米",
+          "target": "维尔汀",
+          "keywords": "结识,同行",
+          "description": "汤米从敌对转为同伴，跟随维尔汀一同行动。"
+        }
+      ]
+    }
