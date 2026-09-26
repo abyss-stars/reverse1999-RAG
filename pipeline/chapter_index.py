@@ -16,7 +16,16 @@ README 条目格式:
 
 输出: state/chapter_index.json
     每章包含 order(阅读顺序) / chapter_no(数字前缀) / title / category /
-    source_rel / filename / episodes / trails / version
+    source_rel / filename / episodes / trails / version / version_source
+
+version 的解析顺序（见 resolve_version）:
+    1. metadata    —— corpus/exports/chapter_metadata.json 的字段，最权威
+                      但按标题 join，81 章只覆盖 25 章
+    2. 主线对照表  —— MAINLINE_VERSION，补 metadata 缺失的主线/特别篇
+                      （灰机 wiki 逐章实测，共 5 章）
+    3. 编号规则    —— 活动/角色/轶事的章节号前两位即版本
+                      活动 15/15 已验证；角色/轶事无权威字段可校验，置信度较低
+    version_source 字段记录每章来自哪一档，便于按可信度筛选/复核。
 """
 from __future__ import annotations
 
@@ -73,6 +82,70 @@ def git(*args: str) -> str:
         return r.stdout.strip()
     except Exception:
         return ""
+
+
+# ---------------------------------------------------------------- 版本解析
+# 主线章节号 101-114 是「顺序编号」(第1章…第14章)，与游戏版本号之间
+# **没有算术关系**。反例: 105 是 1.4，而按前两位派生会得到 1.0。
+# 所以主线必须用显式对照表；编号规则只适用于活动/角色/轶事。
+#
+# 来源: 灰机 wiki (res1999.huijiwiki.com) 各主线章节页的固定句式
+#       「<标题>是 X.Y版本 的主线剧情活动。」
+#       交叉验证 1: wikiru (reverse1999.wikiru.jp)「Ver.3.7 = 13th他者の哀しみ」
+#       交叉验证 2: exports/chapter_metadata.json 已有字段全部吻合
+#                   (107=1.9, 108=2.2, 110=2.8 三处独立互证)
+# 最后核实: 2026-09-26
+MAINLINE_VERSION = {
+    "101": "1.0",   # 101-104 一次性在 1.0 上线（序章 + 第1-3章）
+    "102": "1.0",
+    "103": "1.0",
+    "104": "1.0",
+    "105": "1.4",
+    "310": "1.4",   # 特别篇《星》，ordinal=5SP，紧接第5章，版本与 105 同
+    "106": "1.7",
+    "107": "1.9",
+    "108": "2.2",
+    "109": "2.6",
+    "110": "2.8",
+    "111": "3.0",   # 3.0 系列开篇
+    "112": "3.3",
+    "113": "3.7",
+    "114": "4.0",
+    # 313 特别篇《船喻》：灰机 wiki 无独立页面(404)，chapter_metadata.json 无条目，
+    # 正文亦不含版本信息 -> 保持 None，不猜。
+    # 编号规律（31X 跟随第 X 章，如 310=5SP、311=7TH）提示它可能跟随第13章
+    # (113=3.7)，但语料把它的阅读顺序排在 114 之后，两种读法冲突，故不下结论。
+}
+
+# 活动 / 角色 / 轶事的章节号前两位编码版本：20101 -> 2.0，1901 -> 1.9，
+# 305101 -> 3.0。已验证：活动章节 15/15 与权威字段全部吻合。
+NUMBER_RULE_CATEGORIES = {"activity", "character", "anecdote"}
+
+
+def derive_version(chapter_no: str, category: str) -> str | None:
+    """按章节号前两位派生版本号（仅活动/角色/轶事）。"""
+    if category not in NUMBER_RULE_CATEGORIES:
+        return None
+    if not chapter_no or len(chapter_no) < 3 or not chapter_no[:2].isdigit():
+        return None
+    return f"{chapter_no[0]}.{chapter_no[1]}"
+
+
+def resolve_version(ch: dict, meta: dict | None) -> tuple[str | None, str | None]:
+    """按可信度依次解析版本，并返回来源以便追溯。
+
+    1. metadata    —— 游戏自身导出字段，最权威
+    2. 主线对照表  —— 灰机 wiki 实测，补 metadata 缺失的主线/特别篇
+    3. 编号规则    —— 仅活动/角色/轶事
+    """
+    if meta and meta.get("version"):
+        return meta["version"], "metadata"
+    if ch["chapter_no"] in MAINLINE_VERSION:
+        return MAINLINE_VERSION[ch["chapter_no"]], "wiki"
+    derived = derive_version(ch["chapter_no"], ch["category"])
+    if derived:
+        return derived, "number_rule"
+    return None, None
 
 
 def load_versions() -> dict[str, dict]:
@@ -156,10 +229,11 @@ def main() -> int:
     print(f"  解析到 {len(chapters)} 章")
 
     versions = load_versions()
-    hit = 0
 
-    # 校验源文件存在 + 补充 version
+    # 校验源文件存在 + 解析 version
     missing: list[str] = []
+    by_source: dict[str, int] = {}
+    conflicts: list[str] = []
     for ch in chapters:
         src = ZH_DIR / ch["source_rel"]
         ch["exists"] = src.exists()
@@ -168,17 +242,39 @@ def main() -> int:
             missing.append(ch["source_rel"])
 
         v = versions.get(ch["title"])
-        ch["version"] = v["version"] if v else None
         ch["ordinal"] = v["ordinal"] if v else None
-        if v:
-            hit += 1
+
+        ch["version"], ch["version_source"] = resolve_version(ch, v)
+        key = ch["version_source"] or "unresolved"
+        by_source[key] = by_source.get(key, 0) + 1
+
+        # 交叉校验：主线对照表必须与 metadata 字段一致，冲突要暴露而不是静默取一个
+        table = MAINLINE_VERSION.get(ch["chapter_no"])
+        if table and v and v.get("version") and v["version"] != table:
+            conflicts.append(f"{ch['chapter_no']} {ch['title']}: "
+                             f"metadata={v['version']} vs 对照表={table}")
 
     if missing:
         print(f"  [warn] {len(missing)} 个源文件不存在:")
         for m in missing[:10]:
             print(f"         {m}")
 
-    print(f"  补充 version 信息: {hit}/{len(chapters)} 章命中")
+    if conflicts:
+        print(f"  [warn] {len(conflicts)} 处版本冲突（metadata vs 主线对照表）:")
+        for c in conflicts:
+            print(f"         {c}")
+
+    resolved = len(chapters) - by_source.get("unresolved", 0)
+    print(f"  版本解析: {resolved}/{len(chapters)} 章已确定")
+    for src_name, label in (("metadata", "metadata 字段"),
+                            ("wiki", "主线对照表(灰机 wiki)"),
+                            ("number_rule", "章节号编号规则"),
+                            ("unresolved", "未确定")):
+        if by_source.get(src_name):
+            print(f"    {label:<26} {by_source[src_name]:>3} 章")
+    for c in chapters:
+        if not c["version"]:
+            print(f"    [未确定] {c['chapter_no']:>6} {c['title']} ({c['category']})")
 
     # 分类统计
     counts: dict[str, int] = {}
