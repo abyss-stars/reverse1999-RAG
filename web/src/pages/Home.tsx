@@ -38,7 +38,7 @@ export const Home: FC<Props> = ({ index, fileMap, quotes, initialQuestion, initi
   const submit = (q: string, p: string, s: Scope = scope) => {
     const question = q.trim()
     if (!question) return
-    // 把「问题 + 档位 + 范围」写进 hash —— 分享链接天然可用（website.md G2）
+    // 把「问题 + 档位 + 范围」写进 hash —— 分享链接天然可用
     const extra = scopeToHash(s)
     navigate(`/?q=${encodeURIComponent(question)}&preset=${encodeURIComponent(p)}${extra ? `&${extra}` : ''}`)
     void run(question, PRESET_BY_NAME[p] ?? PRESETS[0], toQueryFilter(s))

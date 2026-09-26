@@ -27,7 +27,7 @@ export interface ChapterIndex {
   chapters: ChapterRecord[]
 }
 
-/** 版本来源的可信度注解 —— 直接对应 AGENTS.md §3 的分档。 */
+/** 版本来源的可信度注解。 */
 export const VERSION_SOURCE_NOTE: Record<string, string> = {
   metadata: '游戏自身导出字段，最权威',
   wiki: '灰机 wiki 逐章实测，三方互证',

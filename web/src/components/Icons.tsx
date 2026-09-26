@@ -4,7 +4,7 @@ interface IconProps {
   className?: string
 }
 
-/** 站点标记 —— 自绘几何图形，不是参考站的 Logo（见 website.md C-5 资产策略）。 */
+/** 站点标记 —— 自绘几何图形，不是参考站的 Logo。 */
 export const MarkIcon: FC<IconProps> = ({ className }) => (
   <svg className={className} viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth={1.2} aria-hidden="true">
     <path d="M16 3 29 16 16 29 3 16Z" />

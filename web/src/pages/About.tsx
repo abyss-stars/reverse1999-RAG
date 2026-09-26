@@ -2,7 +2,7 @@ import type { FC } from 'react'
 import { CORPUS_LOCK, INDEX_STATS } from '../lib/stats'
 
 /**
- * 合规页。三层声明缺一不可（website.md D-4）：
+ * 合规页。三层声明缺一不可：
  * ① 语料与游戏资源的第三方版权；② 本站性质（个人自用、非官方）；
  * ③ 设计风格的来源与"未复制美术资产"的事实。
  */

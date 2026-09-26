@@ -8,7 +8,7 @@
 
 先取参考图（需 stealth 代理，Cloudflare 会挡直连）：
     用 firecrawl 抓 https://res1999.huijiwiki.com/wiki/首页 的整页截图，
-    存为 docs/ref/wiki-home.png。详见 website.md「C-6 探针记录」。
+    存为 docs/ref/wiki-home.png。
 """
 
 from __future__ import annotations
@@ -93,7 +93,7 @@ def filtered(img: Image.Image, rel, *, sat: float, val: float, n: int = 4):
 def write_swatch() -> None:
     """把定稿色板导成一张对照图，供与参考截图并排比对。
 
-    色值本身来自上面的实测统计（写死在 TOKENS 里，与 website.md「C-1 色板」同源）；
+    色值本身来自上面的实测统计（写死在 TOKENS 里）；
     这张图只是可视化，不是新数据。
     """
     from PIL import ImageDraw

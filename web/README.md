@@ -1,7 +1,7 @@
 # web/ — 1999 剧情档案（L3 前端工程）
 
 React + Vite + TypeScript，**手写 CSS 设计令牌**（不用 UI 框架）。
-视觉与版式来自 `web/design/v0-home.html` 的定稿（见 `website.md` §3 C/D 组）。
+视觉与版式来自 `web/design/v0-home.html` 的定稿。
 
 ---
 
@@ -128,7 +128,7 @@ scripts/
 
 **① hash 路由而不是 react-router。**
 上线形态是把产物交给**薄服务层**用 `StaticFiles` 托管（`server/app.py` 末尾的挂载；
-L3b 下前端要调本服务的 `/api/*`，所以挂进 LightRAG 容器是错的 —— 见 `website.md` §8.4）——
+L3b 下前端要调本服务的 `/api/*`，所以挂进 LightRAG 容器是错的）——
 而 `StaticFiles` **没有 SPA fallback**，`/chapters` 这种真实路径一刷新就 404。hash 路由天然免疫，
 还少一个依赖。副作用：把「问题 + 档位」写进 hash 后**分享链接天然可用**
 （`#/?q=…&preset=sweep`），这正是原生 `/workspace` 做不到的那件事。
@@ -144,7 +144,7 @@ L3b 下前端要调本服务的 `/api/*`，所以挂进 LightRAG 容器是错的
 所以这两页换一条把压实提前的曲线，并把页头放进 18vh 的紧凑 hero。
 
 **④ 思考块必须剥掉再渲染。**
-本项目**故意**给回答角色保留思考（`AGENTS.md` §2.7：抽取/关键词关掉 thinking 是为了省钱，
+本项目**故意**给回答角色保留思考（抽取/关键词角色关掉 thinking 是为了省钱，
 回答角色保留是为了质量）。但实测该模型把思维链**内联**在 content 流里、
 用 `<think>…</think>` 包起来 —— 端到端验证时抓到正文开头是
 `<think>We need answer in Chinese…`。现在 `lib/think.ts` 把它剥出来折叠显示，

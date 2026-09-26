@@ -6,7 +6,7 @@ preset_matrix.py — 预设参数标定矩阵
 对每个预设跑一组代表性问题，只用 `only_need_context=true` 取上下文
 （不调 LLM 生成），因此**便宜且直击问题本质**：回答的质量上限由检索覆盖决定。
 
-每次改动 query_planner.PRESETS 之后都应该重跑一次，把新数字写回 docs/检索调参.md。
+每次改动 query_planner.PRESETS 之后都应该重跑一次。
 
 用法:
     python scripts/preset_matrix.py                # 完整 5x5 矩阵

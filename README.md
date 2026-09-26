@@ -4,9 +4,12 @@
 
 语料来自 [Reverse1999-Story-Compendium](https://github.com/VioletWilde/Reverse1999-Story-Compendium)。
 
-**本文件只讲"这是什么、怎么从零跑起来"。**
-动手改动代码或跑管线之前，请先读 [`AGENTS.md`](AGENTS.md)——
-那里有操作顺序铁律、踩过的坑、数据可信度分级和排障手册。
+**本文件只讲"这是什么、怎么从零跑起来"。** 动手改动代码或跑管线之前，
+先读下面的「动手前的铁律」——那几条踩过坑，顺序错了要重建索引。
+
+> 公开仓库只包含**能跑起来的代码 + 运行说明**（本文件、[`server/README.md`](server/README.md)、
+> [`web/README.md`](web/README.md)）。开发过程中的工作笔记与推导记录不入库，
+> 只存在于作者本机；下文提到它们时会标为「本机文档」。
 
 ---
 
@@ -25,7 +28,14 @@
 | 说话人归属 | 「这是我的箱子，请还给我」谁说的 | 答出「维尔汀」 |
 | 跨章伏笔 | 维尔汀「实验体」身份如何揭示 | 串起 112 章琥珀屋 + 102 章 + 第277号实验 |
 
-验收标准（引用必须落到正确章节，说话人不得丢失）见 [`AGENTS.md` §4.5](AGENTS.md#45-验收回归)。
+验收标准（引用必须落到正确章节，说话人不得丢失）：
+
+| 验收点 | 期望 |
+|---|---|
+| 引用落到正确章节 | `references` 的 `file_path` 应是 `101-在我们的时代里.md` 这类 |
+| 说话人未丢 | 第 4 题必须答出「维尔汀」 |
+| 跨章汇总 | 第 2 题应跨多个剧情单元汇总 |
+| 分块真的用了 P | `data/inputs/__parsed__/*.parsed/*.blocks.jsonl` 存在且 heading 层级正确 |
 
 ---
 
@@ -38,6 +48,45 @@
   原生 `/workspace` 仍可用，但它做不到两件本项目需要的事：**按游戏版本/章节限定检索范围**、
   **把五档预设做成可点选的档位**
 - 存储：**PostgreSQL 四件套**（单容器承担 KV / 向量 / 图 / 文档状态）
+
+---
+
+## 动手前的铁律
+
+这几条是本项目真踩过坑之后定下的，**违反会破坏已花过钱的索引**。
+
+### 灌库顺序不能颠倒
+
+```
+build_inputs.py  →  ingest.py --scan  →  ingest.py --watch  →  ingest.py --backfill
+```
+
+**根因**：LightRAG 处理完一份文件后，会把它从 `data/inputs/` **移动**到
+`data/inputs/__parsed__/`（连同 `.parsed/` sidecar）。所以顶层会变空，
+**第二次扫描只会得到 `0 discovered`**。
+`ingest.py --scan` 已加护栏：顶层为空时直接提示"需要重新铺入"，而不是静默返回 0。
+
+### 不可逆决策（改了就得重建整个索引）
+
+| 项 | 冻结值 | 后果 |
+|---|---|---|
+| Embedding 模型 | `text-embedding-v4` | 换模型或维度 = 全部向量失效 |
+| `EMBEDDING_DIM` | `1024` | 同上 |
+| 存储后端 | PostgreSQL 四件套 | LightRAG **加入文档后不能更换存储实现** |
+| 分块策略 | `md:native-P` | 换分块 = 全部 chunk 与图谱贡献重算 |
+
+云端抽取是花过钱的（81 章 8,749 行 LLM 缓存）。**动这几个值之前先想清楚。**
+
+### 保命规则
+
+- `delete_document` **永远传 `delete_llm_cache=False`** —— 缓存是花过钱的资产
+- 语料**不要**改成 submodule、不要入库（第三方版权，见「版权与许可」）
+- 重灌章节用 `pipeline/reindex.py`，**不要**手动删 `data/inputs/` 里的文件
+- 改了 `build_inputs.py` 的头部渲染后，要跑一次 `pipeline/ingest.py --backfill`
+  （清单状态按清洗后正文的 sha256 判定，正文一变状态会被清空；索引本身没坏）
+- 删文档是破坏性作业，同时只受理一个，**忙时返回 `busy` 而不抛异常** ——
+  必须检查 `resp["status"] == "deletion_started"`，否则会**静默漏删**
+  （`reindex.py` / `update_index.py` 已封装正确做法）
 
 ---
 
@@ -69,7 +118,21 @@ corpus/Reverse1999-Story-Compendium @ f6e18439
 
 > **语料的版本信息是残缺的**：`exports/chapter_metadata.json` 只覆盖 25/81 章，
 > 且主线章节号与游戏版本号没有算术关系。本项目用「显式对照表 + 章节号规则」
-> 补到 80/81，并给每章标注了来源与可信度。详见 [`AGENTS.md` §2.8 / §3](AGENTS.md#28-主线版本号推不出来只能查表)。
+> 补到 80/81，并给每章标注了来源与可信度：
+
+| `version_source` | 章数 | 来源与可信度 |
+|---|---|---|
+| `metadata` | 25 | 游戏自身导出字段，最权威 |
+| `wiki` | 5 | 灰机 wiki 逐章实测，三方互证 |
+| `number_rule` | 50 | 章节号前两位规则。**活动已验证 15/15；角色/轶事无权威字段可校验，置信度较低** |
+| `null` | 1 | 313 特别篇《船喻》，无任何来源 |
+
+> ⚠️ `number_rule` 对轶事的结果值得留意：**22 篇轶事全部落在 v1.9**。
+> 这更像 `19XX` 是"内容系列编号"而非发布版本。
+> **没有权威字段前，不要把这批数据当发布版本用。**
+>
+> 主线用显式对照表（`105=1.4 … 114=4.0`），因为主线是顺序编号而版本发布不连续；
+> 活动/角色/轶事的章节号前两位即版本（`20101`→2.0）。改那张表要拿新证据，别为提高覆盖率去猜。
 
 ---
 
@@ -131,12 +194,8 @@ CHUNK_P_SIZE=2000
 ├── .gitignore
 ├── docker-compose.yml            # postgres + lightrag 编排
 ├── README.md                     # ← 本文件：简介与从零复现
-├── AGENTS.md                     # 约定 / 坑 / 手册（动手前必读）
-├── 流程与架构.md                  # 分层架构、数据流、决策推导、里程碑（**本地文档，不入库**）
-├── website.md                    # 网站设计决策与验收：视觉参数、前后端契约、里程碑
 ├── docs/
-│   ├── RAG选型报告.md             # 为什么选 LightRAG
-│   └── 检索调参.md                # 五档预设参数是怎么标定的
+│   └── (开发笔记不入库，见下)
 ├── pipeline/                     # 数据管线
 │   ├── chapter_index.py          #   语料目录 → state/chapter_index.json
 │   ├── build_inputs.py           #   语料 → data/cleaned/ + data/inputs/ + manifest
@@ -147,6 +206,7 @@ CHUNK_P_SIZE=2000
 │       ├── lightrag_client.py    #   REST 客户端（纯标准库）
 │       └── query_planner.py      #   五档检索预设的**唯一真源**
 ├── server/                       # 薄服务层（L3b）：版本过滤 + 生成 + 同源托管
+│   ├── README.md                 #   ← 服务层说明：接口契约、为什么用 venv + FastAPI
 │   ├── app.py                    #   FastAPI 路由与请求体校验
 │   ├── filtering.py              #   上下文裁剪（纯逻辑，可单测）
 │   ├── generation.py             #   裁剪后的自定义生成
@@ -155,6 +215,7 @@ CHUNK_P_SIZE=2000
 │   ├── test_filtering.py         #   纯逻辑单测（不联网）
 │   └── test_service.py           #   集成测试（需服务在跑）
 ├── web/                          # 前端：React 18 + Vite 6 + TS，手写 CSS 令牌
+│   ├── README.md                 #   ← 前端说明：怎么起、令牌在哪、为什么用 hash 路由
 │   ├── src/api/presets.ts        #   由 query_planner 生成，不进手改
 │   ├── src/styles/tokens.css     #   设计令牌唯一处（换肤只改这里）
 │   ├── scripts/verify-app.mjs    #   CDP 端到端验证（真起浏览器、轮询 DOM）
@@ -169,7 +230,7 @@ CHUNK_P_SIZE=2000
 │   ├── rag_storage/              #   ← WORKING_DIR
 │   ├── prompts/entity_type/      #   实体类型定义
 │   ├── ui_templates/             #   品牌定制包（可选，空则惰性）
-│   └── pgdata/                   #   PostgreSQL 数据目录（871 MB，绝不入库）
+│   └── pgdata/                   #   PostgreSQL 数据目录（≈970 MB，绝不入库）
 ├── deploy/
 │   ├── initdb/01-vector.sql      #   CREATE EXTENSION vector
 │   └── Dockerfile.lightrag       #   由 build-image.ps1 使用
@@ -182,9 +243,10 @@ CHUNK_P_SIZE=2000
     └── gen_web_presets.py        # 预设 → web/src/api/presets.ts
 ```
 
-> **`流程与架构.md` 是本地文档，不在仓库里。** 它已被从 git 历史中彻底移除
-> （不只是加入 `.gitignore`），因此在新 clone 的仓库里不存在。
-> 想读的话只能在本机工作区看。其余文档均在库内。
+> **开发笔记不入库。** 除了上面列出的三份 README，其余 `.md`
+> （协作约定与踩坑手册、交接记录、网站设计推导、检索参数标定证据、选型报告、
+> 分层架构）都是**本机文档**：仍在作者工作区里，但不在版本历史中，新 clone 不会有。
+> 公开仓库只保留**能跑起来的代码 + 运行说明**。
 
 ---
 
@@ -210,7 +272,9 @@ git clone https://github.com/HKUDS/LightRAG.git LightRAG
 
 > 语料仓库仍在更新，`f6e18439` 是本项目索引时用的版本。
 > 要换新版本，**先**跑 `python pipeline/update_index.py --check` 看差异再决定 ——
-> 该语料曾把 1977 个单元文件重构成 82 个章节文件（见 [`AGENTS.md` §4.3](AGENTS.md#43-增量更新游戏发新版本时)）。
+> 该语料曾把 1977 个单元文件重构成 82 个章节文件 —— **朴素 diff 会变成"删 81 加 1977"的灾难**，
+> 所以脚本内置布局变更熔断（文件数变化超 30%，或新版本匹配数为 0 时直接中止，
+> 提示改走全量重建；需 `--force-layout` 才强行增量）。
 
 ### 1. 填 `.env`
 
@@ -245,7 +309,7 @@ notepad .env
 
 > ⚠️ **Embedding 模型/维度、存储后端、分块策略一旦灌了数据就不能改**，
 > 改了等于重建整个索引（云端抽取要再花一次钱）。
-> 完整的不可逆清单见 [`AGENTS.md` §0.2](AGENTS.md#02-不可逆决策改了就得重建整个索引)。
+> 完整的不可逆清单见上面「动手前的铁律」。
 
 ### 2. 构建镜像并启动
 
@@ -255,8 +319,10 @@ notepad .env
 ```
 
 Windows 上**不要**直接用 `docker compose build`：BuildKit 不走 Docker Desktop 的代理，
-且上游 `Dockerfile` 的 `# syntax=` 指令会触发联网拉前端镜像。
-原因与修法见 [`AGENTS.md` §1.3 / §1.4](AGENTS.md#13-docker-compose-build-必失败)。
+且上游 `Dockerfile` 的 `# syntax=` 指令会触发联网拉前端镜像 —— 两者都会让构建超时。
+`build-image.ps1` 已处理这两件事（去掉该指令 + 预拉基础镜像 + 带代理 build-arg），
+另外它还会把构建上下文里的 `.sh` 转成 LF：容器里 CRLF 的 shebang 会变成
+`#!/bin/sh\r`，内核找不到 `sh\r` 这个解释器，于是 `restart: unless-stopped` 会无限重启。
 
 ### 3. 确认服务在跑
 
@@ -294,7 +360,7 @@ python scripts/smoke_test.py            # 一次跑完所有题目并给出 PASS
 python scripts/smoke_test.py --only 4   # 只跑第 4 题（说话人归属，有硬性判据）
 ```
 
-四条硬性验收点见 [`AGENTS.md` §4.5](AGENTS.md#45-验收回归)。
+四条硬性验收点见上面「它能做什么」下的表。
 
 ### 6. 全量灌库
 
@@ -305,17 +371,21 @@ python pipeline/ingest.py --watch
 python pipeline/ingest.py --backfill
 ```
 
-**预期规模与耗时**（用于评估磁盘和 API 预算）：
+**规模与耗时**（用于评估磁盘和 API 预算）：
 
-| | 主线 16 章 | 全量 81 章 |
+| | 首次验证（主线 16 章） | 全量 81 章 |
 |---|---|---|
-| 实体 / 关系 | 3,783 / 6,090 | **9,935 / 16,768** |
+| 实体 / 关系 | 3,783 / 6,090 | **9,896 / 16,737** |
 | chunks | 837 | **2,439** |
-| LLM 抽取缓存 | 2,302 行 | **≈6,700 行** |
-| 数据库 | 212 MB | **560 MB** |
-| 耗时 | ≈27 分钟 | **≈112 分钟** |
+| LLM 抽取缓存 | 2,302 行 | **8,749 行** |
+| 数据库 | 212 MB | **630 MB** |
+| 耗时 | ≈27 分钟 | ≈112 分钟 |
 
-> 其中向量约占 423 MB（关系 234 + 实体 149 + chunk 40）——
+> 「全量」列是 2026-09-26 对 `rag` 库直查的结果（`graph_nodes` / `graph_edges` /
+> `lightrag_doc_chunks` / `lightrag_llm_cache`）。「首次验证」列是当时实测，
+> 只作量级参考，未随全量索引更新。
+>
+> 其中向量约占 **470 MB**（关系 269 + 实体 159 + chunk 42）——
 > 这也是为什么存储必须用 PG + pgvector，而不是文件型。
 
 已 PROCESSED 的章节源文件重新铺入后会被判为 `already processed` 并再次归档，
@@ -350,7 +420,7 @@ cd web; npm install; npm run dev
 开发期 `/api` 由 Vite 代理到 :8787，全链路同源、不依赖 CORS。
 **上线**时 `web/dist` 由薄服务层一并托管（`server/app.py` 末尾的 `StaticFiles`），
 也是同源 —— 注意此时**不能**把前端挂进 LightRAG 容器的 `webui` 目录，
-那样它就调不到本服务的 `/api/*` 了（详见 `website.md` §8.4）。
+那样它就调不到本服务的 `/api/*` 了。
 
 ### 验证
 
@@ -396,9 +466,10 @@ python pipeline/update_index.py --apply      # 执行
 
 > ⚠️ 这个语料的目录布局**结构性变过**（v1.1.0 的 1977 个单元文件 → v1.2.0 的 82 个章节文件），
 > 朴素 diff 会变成"删 81 加 1977"的灾难。`update_index.py` 因此内置**布局变更熔断**，
-> 详情与演练结果见 [`AGENTS.md` §4.3](AGENTS.md#43-增量更新游戏发新版本时)。
+> 布局熔断的触发条件与演练结果见上。
 
-改了清洗/渲染逻辑后需要刷新索引正文时，用 `pipeline/reindex.py`（详见 [AGENTS.md §4.4](AGENTS.md#44-强制重灌指定章节)）。
+改了清洗/渲染逻辑后需要刷新索引正文时，用 `pipeline/reindex.py`
+（扫描不会重灌已 PROCESSED 的文档，必须先删后传；删除时固定 `delete_llm_cache=False`）。
 
 ---
 
@@ -423,21 +494,20 @@ python pipeline/update_index.py --apply      # 执行
 | **本仓库代码**（`pipeline/` `scripts/` `deploy/` `server/` `web/src/` 等） | [MIT](LICENSE) |
 | **剧情文本** | 版权归其权利人所有。本仓库**不含**语料原文 —— 语料独立 clone 且被 `.gitignore` 排除，仅用于本地个人检索 |
 | **上游 LightRAG** | `LightRAG/` 为独立 clone，遵循其自身许可（MIT），不纳入本仓库 |
-| **第三方美术素材** | `web/public/bg/`（整站背景图）、`docs/ref/`（比对用截图）均为**官方美术资源**，被 `.gitignore` 排除、**不随仓库分发**，仅供本机自用。上线需换自制素材 —— 设计令牌见 [`website.md`](website.md) §3，换图只需改 `web/src/styles/tokens.css` 一处 |
+| **第三方美术素材** | `web/public/bg/`（整站背景图）、`docs/ref/`（比对用截图）均为**官方美术资源**，被 `.gitignore` 排除、**不随仓库分发**，仅供本机自用。上线需换自制素材 —— 换图只需改 [`web/src/styles/tokens.css`](web/src/styles/tokens.css) 一处 |
 
 ---
 
 ## 相关文档
 
+公开仓库里的文档只有这三份：
+
 | 文档 | 内容 |
 |---|---|
-| [`next.md`](next.md) | **接手必读**：当前状态、下一步该做什么、待决策问题 |
-| [`AGENTS.md`](AGENTS.md) | 操作铁律、环境修复记录、配置与行为坑、数据可信度、操作手册、已知未修问题 |
-| [`website.md`](website.md) | 网站设计：视觉参数（已锁定）、前后端契约、验收标准、实施进度 |
-| [`docs/检索调参.md`](docs/检索调参.md) | 五个检索预设的参数是怎么标定的，以及怎么重新标定 |
-| [`docs/RAG选型报告.md`](docs/RAG选型报告.md) | 为什么选 LightRAG，与其他框架的对比 |
-| [`server/README.md`](server/README.md) | 薄服务层：为什么用 venv + FastAPI、接口契约、已知测量 |
+| **本文件** | 项目简介、前置条件、从零复现、动手前的铁律、版权 |
+| [`server/README.md`](server/README.md) | 薄服务层：为什么用 venv + FastAPI、接口契约、请求体校验、已知测量 |
 | [`web/README.md`](web/README.md) | 前端：怎么起、设计令牌在哪、为什么用 hash 路由 |
 
-> `流程与架构.md`（分层架构、五个关键决策、里程碑 M0-M8）**不入库**，
-> 只存在于本机工作区 —— 它已被从 git 历史中移除。
+> 开发过程的笔记（协作约定与踩坑手册、交接记录、网站设计推导、检索参数标定证据、
+> 选型报告、分层架构与里程碑）**不入库**，只存在于作者本机工作区。
+> 其中会影响正确使用的硬约束，已内联进本文件（见「动手前的铁律」「语料实况」）。

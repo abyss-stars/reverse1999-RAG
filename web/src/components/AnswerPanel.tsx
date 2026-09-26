@@ -131,7 +131,7 @@ export const AnswerPanel: FC<Props> = ({ state, fileMap, onAskChapter }) => {
           检索失败：{state.error}
           <br />
           <span style={{ opacity: 0.8 }}>
-            常见原因：后端未启动、或百炼账号欠费（embedding 被拒会让所有模式返回空）。见 website.md §0.5。
+            常见原因：后端未启动、或百炼账号欠费（embedding 被拒会让所有模式返回空）。
           </span>
         </div>
       )}

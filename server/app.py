@@ -11,7 +11,7 @@
 > 换取的东西很具体：以前 `{"top_k": "abc"}` 会被 `_opt_int` **静默吞掉**、
 > 退回预设默认值，请求看着成功、参数却没生效；现在 pydantic 直接回 422。
 
-职责（website.md A1 = L3b）：
+职责（L3b）：
   1. **版本/章节过滤**：LightRAG 的 `/query` 把检索与生成绑在一起，中间插不进过滤，
      所以这里拆成「取上下文 → 裁剪 → 自己生成」三段（filtering.py / generation.py）。
   2. **预设下发**：从 `pipeline/lib/query_planner.py` 导入，与 pipeline 同源。

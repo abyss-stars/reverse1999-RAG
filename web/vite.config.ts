@@ -2,14 +2,14 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 /**
- * 开发期拓扑（website.md A2 = (a)，L3b）：
+ * 开发期拓扑（开发期形态：L3b）：
  *   浏览器 → Vite dev (:5173) ──/api/*──▶ 薄服务层 (:8787) ──▶ LightRAG (:9621)
  *
  * 薄服务层承载"版本/章节过滤"（检索 → 过滤 → 生成）与预设下发；
  * 不设过滤时它把请求原样透传给 LightRAG。
  *
  * 全程**同源**（前端只请求自己的 /api），因此不依赖 CORS ——
- * 虽然实测后端默认 `CORS_ORIGINS=*` 直连也能通（website.md §6 R12），
+ * 虽然实测后端默认 `CORS_ORIGINS=*` 直连也能通，
  * 但同源才是上线形态的真实行为。
  *
  * `base: './'` + 相对资源路径：产物可以挂在任意前缀下（`/workspace/`、`/site01/workspace/`）。

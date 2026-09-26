@@ -132,7 +132,7 @@ def main() -> int:
     s = get("/api/stats")
     check("统计返回实时实体数", isinstance(s.get("entities"), int), f"entities={s.get('entities')}")
     check("统计返回 chunks", isinstance(s.get("chunks"), int), f"chunks={s.get('chunks')}")
-    # 与数据库直查的 vdb_chunks 行数交叉验证（见 website.md §0.5 的记录）
+    # 与数据库直查的 vdb_chunks 行数交叉验证
     check("chunks 与索引实际值一致（2,439）", s.get("chunks") == 2439, f"chunks={s.get('chunks')}")
     check("实体数与数据库一致（9,896）", s.get("entities") == 9896, f"entities={s.get('entities')}")
     check("未知项如实为 null", s.get("relations") is None)
@@ -251,7 +251,7 @@ def main() -> int:
     check("有多个 response 增量（真流式）", deltas > 1, f"deltas={deltas}")
     check("以 response_time 收尾", kinds[-1] == "response_time", f"行序={kinds}")
 
-    # 验收标准 2（已按实测修正，见 website.md §5）：
+    # 验收标准 2（已按实测修正）：
     # 感知响应性由"首个进度反馈"决定，而不是首个答案 token；而"首字节"这个量在
     # 本机裸 socket 上测得偏大（约 1.6s），与服务端打点（0.012s）和前端观测（<0.5s）矛盾，
     # 归因未明 —— 所以这里只做宽松回归护栏，不做精确断言。

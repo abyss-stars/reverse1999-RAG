@@ -20,7 +20,7 @@ interface Props {
  * 检索范围限定（薄服务层的版本/章节过滤）。
  *
  * 刻意做成**默认收起**：首页的主体是"选档位 + 提问"，
- * 范围限定是进阶动作（`website.md` §8 的 L3b 能力），
+ * 范围限定是进阶动作（L3b 能力），
  * 收起时用一行摘要说明当前范围与命中章数，不占版面。
  */
 export const ScopeFilter: FC<Props> = ({ index, value, onChange, disabled }) => {
