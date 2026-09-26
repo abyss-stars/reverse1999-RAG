@@ -36,7 +36,9 @@ LightRAG/
 # ------------------------------------------------------------
 # state/ 下的索引清单必须进 git —— 它是「本次索引对应哪个语料
 # 版本、哪套配置」的可追溯凭据。此处显式反忽略以防将来误加规则。
+# 下划线开头的是临时计划文件（如 reindex.py --from-plan 的输入），不入库。
 # ------------------------------------------------------------
+state/_*
 !state/index_manifest.json
 !state/corpus.lock.json
 !state/chapter_index.json
@@ -69,3 +71,4 @@ desktop.ini
 *.zip
 dist/
 build/
+流程与架构.md

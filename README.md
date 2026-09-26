@@ -1,113 +1,40 @@
 # 1999RAG · 《重返未来：1999》剧情检索
 
 以 **LightRAG** 为检索内核、面向**简体中文剧情文本**的本地知识库问答系统。
+
 语料来自 [Reverse1999-Story-Compendium](https://github.com/VioletWilde/Reverse1999-Story-Compendium)。
+
+**本文件只讲"这是什么、怎么从零跑起来"。**
+动手改动代码或跑管线之前，请先读 [`AGENTS.md`](AGENTS.md)——
+那里有操作顺序铁律、踩过的坑、数据可信度分级和排障手册。
 
 ---
 
-## 当前进度
+## 它能做什么
 
-| 步骤 | 状态 |
-|---|---|
-| ① 环境诊断 | ✅ Docker Desktop（`E:\Docker\Program`）+ 本地代理 `127.0.0.1:7890` |
-| ② 修 Docker 插件 | ✅ `docker compose` / `docker buildx` 可用（见「环境修复记录」） |
-| ③ 语料 clone | ✅ `corpus/Reverse1999-Story-Compendium` @ `f6e18439` |
-| ④ 章节索引 | ✅ 81 章 |
-| ⑤ 语料清洗 | ✅ `data/cleaned/` 81 章；`data/inputs/` 已铺入**主线 16 章** |
-| ⑥ PostgreSQL | ✅ 运行中（PG 18.6 + pgvector 0.8.6，端口 5433） |
-| ⑦ 实体类型定义 | ✅ `data/prompts/entity_type/entity_type_prompt.yml` |
-| ⑧ LightRAG 镜像 | ✅ `lightrag-1999:local`（v1.5.8，从本地源码构建） |
-| ⑨ 服务启动 | ✅ <http://localhost:9621> 已就绪，PG 13 张表已建 |
-| ⑩ P 分块验证 | ✅ 离线解析 101 章 → 58 blocks，层级正确（`{1:1, 2:16, 3:41}`） |
-| ⑪ 填 API Key | ✅ DeepSeek(LLM) + 百炼(Embedding/Rerank) |
-| ⑫ 单章冒烟测试 | ✅ 101 章：22 chunks / 200 实体 / 302 关系 |
-| ⑬ 验收四类问题 | ✅ **4/4 通过** |
-| ⑭ 抽取关推理优化 | ✅ `EXTRACT/KEYWORD` 关思考 → **3.3× 提速**，质量不降 |
-| ⑮ **主线 16 章灌完** | ✅ 3783 实体 / 6090 关系 / 837 chunks |
-| ⑯ 增量更新脚本 | ✅ `pipeline/update_index.py`（按 blob 比对 + 布局变更熔断） |
-| ⑰ **全语料 81 章灌完** | ✅ **9935 实体 / 16768 关系 / 2439 chunks / 560 MB** |
-| ⑱ 验收回归 | ✅ **10/10 通过** |
-| ⑲ **M6 增量演练** | ✅ 布局熔断两次拦下（exit 2）；删 310 章 → 实体 −51/关系 −81 → 重灌**精确恢复 ±0** |
-| ⑳ **版本元数据补齐** | ✅ 25/81 → **80/81** 章有版本（主线对照表 + 编号规则，见坑 ⑧） |
+围绕《重返未来：1999》简体中文剧情文本做**带引用的问答**，检索结果由图谱（实体/关系）
+与向量混合召回，并支持按**游戏版本**筛选章节。
 
-### 全语料索引规模（81 章 / 9.49 MB 清洗后文本）
+已通过 10 题回归（`python scripts/smoke_test.py`），覆盖四类能力：
 
-| 指标 | 值 |
-|---|---|
-| 文档 | **81 / 81 PROCESSED** |
-| 图节点（实体） | **9,935** |
-| 图边（关系） | **16,768** |
-| chunks | **2,439** |
-| 向量写入 | entity 9935 / relation 16768 / chunk 2439 —— 全成功 |
-| LLM 抽取缓存 | **6,660** 行（≈81 MB，重灌时几乎全命中） |
-| 数据库 | **560 MB** |
-
-各表占用：
-
-| 表 | 大小 | 说明 |
+| 类型 | 示例问题 | 表现 |
 |---|---|---|
-| `lightrag_vdb_relation_...` | 234 MB | 关系向量 + 关系描述文本 |
-| `lightrag_vdb_entity_...` | 149 MB | 实体向量 + 实体描述文本 |
-| `lightrag_llm_cache` | 81 MB | 抽取缓存（花过钱的，别删） |
-| `lightrag_vdb_chunks_...` | 40 MB | chunk 向量 |
-| `lightrag_graph_edges` | 11 MB | 图边 |
-| `lightrag_doc_chunks` | 11 MB | chunk 正文 |
+| 单点事实 | 维尔汀在序章对十四行诗说了什么 | 定位到 3 处对话并引用原文 |
+| 跨章汇总 | 苏芙比的完整经历 | 串起庄园→瓦尔登湖→密道→逃脱全脉络 |
+| 人物关系 | 维尔汀和 APPLe 的关系 | 说明是会说话的苹果同伴 |
+| 说话人归属 | 「这是我的箱子，请还给我」谁说的 | 答出「维尔汀」 |
+| 跨章伏笔 | 维尔汀「实验体」身份如何揭示 | 串起 112 章琥珀屋 + 102 章 + 第277号实验 |
 
-### 主线 16 章灌库实测
+验收标准（引用必须落到正确章节，说话人不得丢失）见 [`AGENTS.md` §4.5](AGENTS.md#45-验收回归)。
 
-| 指标 | 值 |
-|---|---|
-| 文档 | 16 / 16 PROCESSED |
-| 图节点（实体） | **3,783** |
-| 图边（关系） | **6,090** |
-| chunks | **837** |
-| 向量写入 | entity 3783 / relation 6090 / chunk 837 —— 全成功 |
-| LLM 抽取缓存 | **2,302** 行（重灌时几乎全命中） |
-| DB 大小 | 212 MB |
-| 耗时 | **约 27 分钟**（14 章，3.0 MB） |
-
-### 单章冒烟测试实测数据（101 章 · 98 KB）
-
-| 指标 | 值 |
-|---|---|
-| 解析 block 数 | 58（`{level1:1, level2:16, level3:41}`） |
-| 切分 chunk 数 | 22（P 分块器把同父标题下的短段落合并到接近 2000 token） |
-| 抽出实体 / 关系 | 200 / 302 |
-| 实体类型分布 | character 47 · item 38 · location 32 · term 27 · organization 19 · timeperiod 9 · work 9 · event 8 · creature 8 |
-| 向量写入 | entity 200 / relation 302 / chunk 22 —— 全部成功 |
-| LLM 抽取缓存 | 55 → 56 行（**重扫几乎全部命中缓存**） |
-| 首轮耗时 | 约 3 分钟（抽取 ~80s + 合并 ~100s） |
-| 问答耗时 | 2.9 ~ 27.8 s（mix 模式 + rerank） |
-
-### 验收结果
-
-| # | 类型 | 问题 | 结果 |
-|---|---|---|---|
-| 1 | 单点事实 | 维尔汀在序章对十四行诗说了什么 | ✅ 定位到 3 处对话并引用原文 |
-| 2 | 跨章汇总 | 苏芙比的完整经历 | ✅ 串起庄园→瓦尔登湖→密道→逃脱全脉络 |
-| 3 | 人物关系 | 维尔汀和 APPLe 的关系 | ✅ 说明是会说话的苹果同伴 |
-| 4 | 说话人归属 | 「这是我的箱子，请还给我」谁说的 | ✅ 答出「维尔汀」 |
-| 5 | 跨主线·人物 | 阿尔卡纳是谁？和维尔汀发生过什么 | ✅ 串起 102/105/107/110/112/113 六章 |
-| 6 | 跨主线·世界观 | 「暴雨」是什么？有什么影响 | ✅ 汇总机制/症候/影响/各方立场/免疫手段 |
-| 7 | 跨主线·伏笔 | 维尔汀「实验体」身份如何揭示 | ✅ 串起 112 章琥珀屋 + 102 章 + 第277号实验 |
-| 8 | 角色剧情分类 | 角色剧情《打虎记》讲了什么 | ✅ 完整复述程和光/秀郎中/白虎/万两会票结局 |
-| 9 | 轶事分类 | 轶事《塞梅尔维斯》讲了什么 | ✅ 破案线 + 血食怪挣扎 + 多瑙黎明号 |
-| 10 | 活动分类 | 活动《飞驰！明日之城》梗概 | ✅ **主动声明只检索到 13 个剧情单元中的 1 个，未编造** |
-
-> 第 8/9/10 题分别压测三个新分类；第 7 题是跨主线伏笔题。
->
-> 第 10 题的表现值得单独说：它没有硬编一个梗概，而是明确说
-> "上下文中只提供了 `2010101 · 周末狂热` 一个单元……其余 12 个未出现，
-> 因此无法给出完整梗概"。**这种"承认不知道"的行为比编造答案有价值得多。**
-> 想让这类"整体梗概"问题答得更全，可以临时调高 `CHUNK_TOP_K` 或改用 `global` 模式。
+---
 
 ## 已确认的范围
 
-- **全部使用云端模型**：阿里云百炼 / DashScope（Qwen）
+- **全部使用云端模型**：DeepSeek（抽取/回答）+ 阿里云百炼（Embedding / Rerank）
 - **只做简体中文**（`readable/story_reader_linked/zh-CN/`）
 - **不做防剧透** —— 直接用 LightRAG 原生 WebUI 问答，不自建前端
-- 存储：**PostgreSQL 四件套**
-- 首次灌库：**只灌主线 16 章**，验证达标后再加灌其余 65 章
+- 存储：**PostgreSQL 四件套**（单容器承担 KV / 向量 / 图 / 文档状态）
 
 ---
 
@@ -136,6 +63,10 @@ corpus/Reverse1999-Story-Compendium @ f6e18439
 ```
 
 清洗时剥掉了：阅读导航块、`## 目录`、`<a id>` 锚点。
+
+> **语料的版本信息是残缺的**：`exports/chapter_metadata.json` 只覆盖 25/81 章，
+> 且主线章节号与游戏版本号没有算术关系。本项目用「显式对照表 + 章节号规则」
+> 补到 80/81，并给每章标注了来源与可信度。详见 [`AGENTS.md` §2.8 / §3](AGENTS.md#28-主线版本号推不出来只能查表)。
 
 ---
 
@@ -166,8 +97,7 @@ LIGHTRAG_DOC_STATUS_STORAGE=PGDocStatusStorage
 1. 上游 `LightRAG/AGENTS.md` 自己写着，五个文件型存储
    *"are supported for **small-scale testing and validation only**"*
 2. `NetworkXStorage` 每次图编辑都要**重写整份 GraphML**（20 万节点约 17s）
-3. **LightRAG 加入文档后不能更换存储实现**，而云端抽取要花钱 ——
-   选错就是重新索引一遍
+3. **LightRAG 加入文档后不能更换存储实现**，而云端抽取要花钱 —— 选错就是重新索引一遍
 4. `PGTableGraphStorage` 是纯表实现，**不需要 Apache AGE**，
    官方 `pgvector/pgvector:pg18` 镜像就够
 
@@ -183,213 +113,7 @@ CHUNK_P_SIZE=2000
 保留完整标题路径 —— 正好匹配「章 → 剧情单元 → 段落」和对话体的大量短段落。
 
 > ⚠️ 若 sidecar 没生成，`P` 会**静默降级为 R**。灌完第一批后用
-> `python pipeline/ingest.py --check-parser` 验证路由，并检查
-> `data/inputs/__parsed__/` 下是否真有 `.blocks.jsonl`。
-
----
-
-## 环境修复记录（排障用）
-
-这台机器上有三个坑，都已修好：
-
-### ① `docker compose` 不可用
-
-Docker Desktop 自带插件在 `E:\Docker\Program\resources\cli-plugins\`，
-但没注册到用户插件目录，且**重启 Docker Desktop 会重置**
-`~/.docker/cli-plugins`。持久修法写进 docker CLI 配置：
-
-```json
-// ~/.docker/config.json
-"cliPluginsExtraDirs": ["E:\\Docker\\Program\\resources\\cli-plugins"]
-```
-
-### ② Docker 守护进程不走代理
-
-Docker Hub 被墙（`auth.docker.io` 超时），而系统代理没被 Docker 继承。
-写入 Docker Desktop 设置并重启：
-
-```json
-// %APPDATA%\Docker\settings-store.json
-"ProxyHttpMode": "manual",
-"OverrideProxyHTTP": "http://127.0.0.1:7890",
-"OverrideProxyHTTPS": "http://127.0.0.1:7890",
-"OverrideProxyExclude": "localhost,127.0.0.1,*.local,192.168.*,10.*,172.16.*"
-```
-
-重启：`& "E:\Docker\Program\DockerCli.exe" -Shutdown` 然后启动
-`Docker Desktop.exe`。（备份在 `settings-store.json.bak-1999rag`）
-
-### ③ `docker compose build` 必失败
-
-上游 Dockerfile 第一行 `# syntax=docker/dockerfile:1` 会让 BuildKit 去
-Docker Hub 拉 frontend 镜像，而 **BuildKit 不走上面那个代理**，必然超时。
-
-修法：用 `scripts/build-image.ps1`。它把该指令去掉（BuildKit 内建 frontend
-支持 cache mount，功能不受影响），并把基础镜像预拉本地化，再带代理 build-arg 构建。
-
-### ④ 容器起来就无限重启：`exec ... no such file or directory`
-
-```
-1999rag-lightrag | exec /usr/local/bin/docker-entrypoint.sh: no such file or directory
-Status=restarting  ExitCode=255
-```
-
-文件明明 COPY 进镜像了。真正原因是 **CRLF 行尾**：
-
-- 本机 `git config core.autocrlf=true`，checkout 出来的 `docker-entrypoint.sh` 是 CRLF
-- 进到 Linux 容器后 shebang 变成 `#!/bin/sh\r`
-- 内核找不到名为 `sh\r` 的解释器 → 报告"文件不存在"，`restart: unless-stopped`
-  于是无限重启
-
-修法：`scripts/build-image.ps1` 在构建前把构建上下文里所有 `.sh` 转成 LF。
-（`autocrlf=true` 下 git 比较会做 CRLF→LF 归一，所以转完之后
-`LightRAG` 工作区在 `git status` 里依然是干净的，不污染上游 checkout。）
-
----
-
-## 配置与行为坑（灌库时踩到的，都已修好）
-
-### ① `EMBEDDING_BATCH_NUM=16` → 400 错误
-
-```
-<400> InternalError.Algo.InvalidParameter: Value error,
-      batch size is invalid, it should not be larger than 10.: input.contents
-```
-
-**百炼的 OpenAI 兼容 embedding 接口单次上限正好是 10 条**（实测 10 通过、11 失败）。
-本机 `.env` 已改为 `EMBEDDING_BATCH_NUM=10`。
-
-> 症状具有迷惑性：抽取阶段（实体/关系）全部成功，只在最后写向量时报
-> `PGVectorStorage[entities] index flush failed`，看起来像数据库问题，其实是 embedding 批量超限。
-
-### ② LightRAG 会把源文件**归档**进 `__parsed__/`
-
-处理完一份文件后，`data/inputs/xxx.md` 会被移动到
-`data/inputs/__parsed__/xxx.md`（连同 `.parsed/` sidecar）。
-所以**第二次扫描会得到 `0 discovered`** —— 顶层已经没有文件了。
-
-**规矩：每次 `scan` 之前都要先重新铺入。**
-
-```powershell
-python pipeline/build_inputs.py --categories mainline   # 先铺
-python pipeline/ingest.py --scan                        # 再灌
-```
-
-`ingest.py --scan` 已加护栏：顶层为空时直接提示"需要重新铺入"而不是静默 0。
-
-### ③ `--watch` 只看 `busy` 会秒退
-
-scan 的**分类阶段**跑在 `scanning_exclusive` 下，此时 `busy` 仍是 `False`。
-只判 `busy` 会在扫描刚启动时误判成"已完成"。
-
-已修：`LightRAGClient._is_active()` 同时判
-`busy / scanning / scanning_exclusive / destructive_busy / pending_enqueues`，
-且 `--watch` 要求连续两次空闲才退出（避开分类↔处理之间的空档）。
-
-### ④ `delete_document` 是 DELETE 方法且带请求体
-
-不是 POST。请求体：
-
-```json
-{ "doc_ids": ["doc-..."], "delete_file": false, "delete_llm_cache": false }
-```
-
-⚠️ **`delete_llm_cache` 默认就是 `false`，务必保持** ——
-抽取缓存是花过钱的成果（101 章 = 55 行缓存）。删文档不会删缓存，
-重灌时几乎全部命中，只花 embedding 的钱。
-
-### ⑤ API 返回的文档状态是**小写**
-
-`processed` / `failed` / `pending`，不是 `PROCESSED`。
-回填清单时要做大小写归一（`pipeline/ingest.py --backfill` 已处理）。
-
-### ⑥ 容器里没有 curl/wget
-
-最终镜像阶段只装了 `gosu`/`libcairo2`，healthcheck 不能用 curl。
-已改为用容器自带的 python 探活。
-
-### ⑦ 推理型模型白烧 token（已优化）
-
-`deepseek-flash` 是推理型模型，每次调用都会先生成 `reasoning_content`。
-实体/关系抽取是**结构化 JSON 任务**，不需要思考链。
-
-DeepSeek 支持 `thinking: {"type": "disabled"}` 关闭推理，而 LightRAG 的
-OpenAI binding 恰好有 `extra_body` 字段可以透传（`binding_options.py:736` →
-`lightrag_server.py:1918 kwargs.update(...)` → OpenAI SDK 的 `extra_body`）。
-
-写法是**按角色**设环境变量：
-
-```bash
-EXTRACT_OPENAI_LLM_EXTRA_BODY='{"thinking": {"type": "disabled"}}'
-KEYWORD_OPENAI_LLM_EXTRA_BODY='{"thinking": {"type": "disabled"}}'
-# 回答角色保留思考以保证质量:
-# QUERY_OPENAI_LLM_EXTRA_BODY='{"thinking": {"type": "disabled"}}'
-```
-
-命名规则是 `{角色}_{BINDING}_{字段}`，角色可选
-`EXTRACT` / `KEYWORD` / `QUERY` / `VLM`。
-
-**实测收益**（同一个 prompt）：
-
-| 配置 | 耗时 | completion tokens | reasoning tokens |
-|---|---|---|---|
-| 不传（默认） | 2.28 s | 297 | 264 |
-| **`thinking=disabled`** | **1.01 s** | **25** | **无** |
-| `enabled` + `reasoning_effort=low` | 1.55 s | 178 | 143 |
-
-**整章灌库实测**：
-
-| | 101 章（思考开） | 102 章（思考关） |
-|---|---|---|
-| chunk 数 | 22 | 28 |
-| 处理耗时 | ~190 s | **~73 s** |
-| 每 chunk | 8.6 s | **2.6 s（3.3×）** |
-| 抽出实体 / 关系 | 200 / 302 | 209 / 221 |
-| 实体名质量 | — | 正常（阿尔卡纳、华尔街股灾、Megrez δ魔药书室…） |
-| 问答质量 | — | 正常（4/4 回归通过） |
-
-> 可用 `scripts/probe_llm_extra.py` 在容器内随时复验这条链路是否仍然通。
-> 注意 `extra_body` 只有 **OpenAI binding** 有（Bedrock 是 `extra_fields`，
-> Ollama 是 `think` 开关），换服务商要相应改写。
-
-### ⑧ 主线版本号推不出来，只能查表
-
-语料的 `exports/chapter_metadata.json` 只覆盖 **25/81 章**的 `version`（247 条里仅 95 条带中文名），
-且**主线章节号与版本号毫无算术关系**：
-
-```
-105 = 1.4    106 = 1.7    107 = 1.9    108 = 2.2
-109 = 2.6    110 = 2.8    111 = 3.0    112 = 3.3    113 = 3.7    114 = 4.0
-```
-
-主线是**顺序编号**（第1章…第14章），版本发布**不连续**（2.3-2.5、2.7、3.1-3.2 等都没有主线）。
-所以 `chapter_index.py` 用一张显式对照表 `MAINLINE_VERSION`，来源是
-**灰机 wiki 各章节页的固定句式**「<标题>是 X.Y版本 的主线剧情活动。」，
-并与 wikiru 的 `Ver.3.7 = 13th他者の哀しみ`、以及 metadata 已有字段三方互证。
-
-**但编号规则对活动/角色/轶事是成立的**——章节号前两位即版本（`20101`→2.0，`1901`→1.9，`305101`→3.0）。
-活动章节 15/15 与权威字段完全吻合，所以 `resolve_version()` 对这三类走规则、对主线走表。
-每章记 `version_source`（`metadata` / `wiki` / `number_rule`）便于按可信度筛选——
-**角色/轶事没有权威字段可校验，置信度低于活动**。
-
-> 两个特别篇：`310 星`（ordinal `5SP`，跟随第5章，故为 1.4）与 `313 船喻`。
-> 后者灰机 wiki 无独立页面、metadata 无条目、正文亦无版本信息，**保持 `null` 不猜**。
-
-### ⑨ 改清洗后正文会让清单状态被清空（本项目真踩过）
-
-`build_inputs.py` 用**清洗后正文的 sha256** 判断"内容未变则继承旧索引状态"。
-所以只要改了头部渲染逻辑（比如往章节头加一行版本号），
-那一批章节的 sha256 就全变，`lightrag_doc_id` / `status` / `chunks_count` 会被清空。
-
-**索引本身没坏**（LightRAG 里文档都在），跑一次回填即可从实时索引恢复：
-
-```powershell
-python pipeline/ingest.py --backfill
-```
-
-> 本次给 55 章补上版本行时命中此坑（81 → 26 章有 doc_id，回填后恢复 81）。
-> 注意 `source_blob` 目前取不到值（`build_inputs.py` 会 warn），
-> 这会让 `update_index.py` 的 blob 比对退化为不判修改——是待修的独立问题。
+> `python pipeline/ingest.py --check-parser` 验证路由。
 
 ---
 
@@ -397,36 +121,43 @@ python pipeline/ingest.py --backfill
 
 ```
 1999RAG/
-├── LightRAG/                     # 上游源码（只读，保持可 git pull）
+├── LightRAG/                     # 上游源码（独立 clone，不进 git）
 ├── corpus/                       # 语料（独立 clone，不进 git）
 ├── .env / .env.example           # 配置（.env 含密钥，不进 git）
 ├── .gitattributes                # 换行符策略（Dockerfile 续行 / CRLF 坑）
 ├── .gitignore
 ├── docker-compose.yml            # postgres + lightrag 编排
-├── README.md
+├── README.md                     # ← 本文件：简介与从零复现
+├── AGENTS.md                     # 约定 / 坑 / 手册（动手前必读）
+├── 流程与架构.md                  # 分层架构、数据流、决策推导、里程碑
+├── docs/
+│   └── RAG选型报告.md             # 为什么选 LightRAG
 ├── pipeline/                     # 数据管线
 │   ├── chapter_index.py          #   语料目录 → state/chapter_index.json
-│   ├── build_inputs.py           #   语料 → data/inputs/ + manifest
-│   ├── ingest.py                 #   灌库 / 看进度 / 回填 / 冒烟测试
+│   ├── build_inputs.py           #   语料 → data/cleaned/ + data/inputs/ + manifest
+│   ├── ingest.py                 #   灌库 / 看进度 / 回填 / 校验解析器
+│   ├── update_index.py           #   语料更新后的增量重索引（含布局熔断）
+│   ├── reindex.py                #   强制重灌指定章节（清洗逻辑变更后用）
 │   └── lib/lightrag_client.py    #   REST 客户端（纯标准库）
 ├── state/                        # 状态清单（进 git）
 │   ├── corpus.lock.json          #   语料 commit 锁定
-│   ├── chapter_index.json        #   81 章的序号/分类/标题/字节数
+│   ├── chapter_index.json        #   81 章的序号/分类/标题/版本 + 来源
 │   └── index_manifest.json       #   每章 sha256 + doc_id + 索引状态
 ├── data/                         # 运行时数据（不进 git）
 │   ├── inputs/                   #   ← INPUT_DIR（81 章平铺 + __parsed__）
+│   ├── cleaned/                  #   清洗后正文
 │   ├── rag_storage/              #   ← WORKING_DIR
 │   ├── prompts/entity_type/      #   实体类型定义
-│   ├── pgdata/                   #   PostgreSQL 数据目录
-│   └── backups/
+│   ├── ui_templates/             #   品牌定制包（可选，空则惰性）
+│   └── pgdata/                   #   PostgreSQL 数据目录（871 MB，绝不入库）
 ├── deploy/
 │   ├── initdb/01-vector.sql      #   CREATE EXTENSION vector
-│   └── Dockerfile.lightrag       #   由 build-image.ps1 生成
+│   └── Dockerfile.lightrag       #   由 build-image.ps1 使用
 └── scripts/
-    ├── build-image.ps1           # 构建镜像（绕开 syntax 联网问题）
+    ├── build-image.ps1           # 构建镜像（绕开 syntax 联网问题 + .sh 转 LF）
     ├── up.ps1 / down.ps1         # 启停
     ├── status.ps1 / logs.ps1     # 巡检 / 日志
-    └── ...
+    └── smoke_test.py             # 回归题库
 ```
 
 ---
@@ -453,7 +184,7 @@ git clone https://github.com/HKUDS/LightRAG.git LightRAG
 
 > 语料仓库仍在更新，`f6e18439` 是本项目索引时用的版本。
 > 要换新版本，**先**跑 `python pipeline/update_index.py --check` 看差异再决定 ——
-> 该语料曾把 1977 个单元文件重构成 82 个章节文件（见下文「布局变更熔断」）。
+> 该语料曾把 1977 个单元文件重构成 82 个章节文件（见 [`AGENTS.md` §4.3](AGENTS.md#43-增量更新游戏发新版本时)）。
 
 ### 1. 填 `.env`
 
@@ -480,17 +211,15 @@ notepad .env
 |---|---|---|
 | `LLM_BINDING_HOST` | `https://api.deepseek.com/v1` | |
 | `EMBEDDING_BINDING_HOST` | `https://dashscope.aliyuncs.com/compatible-mode/v1` | |
-| `EMBEDDING_MODEL` | `text-embedding-v4` | |
 | `EMBEDDING_DIM` | `1024` | |
-| `EMBEDDING_SEND_DIM` | `true` | 百炼要显式传维度 |
-| `EMBEDDING_USE_BASE64` | `false` | 百炼不支持 base64 embedding |
 | `EMBEDDING_BATCH_NUM` | `10` | **百炼单次上限就是 10，填 16 会报 400** |
 | `LIGHTRAG_PARSER` | `md:native-P,*:legacy-R` | 见「决策 3」 |
 | `CHUNK_P_SIZE` | `2000` | |
 | `EXTRACT_`/`KEYWORD_OPENAI_LLM_EXTRA_BODY` | `{"thinking":{"type":"disabled"}}` | 推理模型按角色关思考，3.3× 提速 |
 
-> ⚠️ **Embedding 一旦灌了数据就不能改**（换模型或维度 = 重建整个索引）。
-> ⚠️ 存储后端同理，有数据后不能换成别的后端。
+> ⚠️ **Embedding 模型/维度、存储后端、分块策略一旦灌了数据就不能改**，
+> 改了等于重建整个索引（云端抽取要再花一次钱）。
+> 完整的不可逆清单见 [`AGENTS.md` §0.2](AGENTS.md#02-不可逆决策改了就得重建整个索引)。
 
 ### 2. 构建镜像并启动
 
@@ -499,10 +228,9 @@ notepad .env
 .\scripts\up.ps1              # 启动 postgres + lightrag
 ```
 
-Windows 上不要直接用 `docker compose build`，原因见「环境修复记录 ③」：
-BuildKit 不走 Docker Desktop 的代理，且上游 `Dockerfile` 的 `# syntax=` 指令
-会触发联网拉前端镜像。`build-image.ps1` 已绕开这两点，并顺手把 24 个 `.sh`
-统一转成 LF（见 ④）。
+Windows 上**不要**直接用 `docker compose build`：BuildKit 不走 Docker Desktop 的代理，
+且上游 `Dockerfile` 的 `# syntax=` 指令会触发联网拉前端镜像。
+原因与修法见 [`AGENTS.md` §1.3 / §1.4](AGENTS.md#13-docker-compose-build-必失败)。
 
 ### 3. 确认服务在跑
 
@@ -531,22 +259,16 @@ python pipeline/ingest.py --watch                       # ③ 盯进度
 python pipeline/ingest.py --backfill                    # ④ 回填 doc_id/状态/chunks
 ```
 
-先只灌主线 16 章是本项目的省钱验证路径（实测约 27 分钟）。
-确认验收通过后再全量，见第 6 步。
+先只灌主线 16 章是省钱验证路径（实测约 27 分钟）。确认验收通过后再全量，见第 6 步。
 
-### 5. 验收（四类问题）
+### 5. 验收
 
 ```powershell
-python scripts/smoke_test.py            # 一次跑完四题并给出 PASS/FAIL
-python scripts/smoke_test.py --only 4   # 只跑第 4 题(说话人归属, 有硬性判据)
+python scripts/smoke_test.py            # 一次跑完所有题目并给出 PASS/FAIL
+python scripts/smoke_test.py --only 4   # 只跑第 4 题（说话人归属，有硬性判据）
 ```
 
-| 验收点 | 期望 |
-|---|---|
-| 引用落到正确章节 | `references` 的 `file_path` 应是 `101-在我们的时代里.md` 这类 |
-| 说话人未丢 | 第 4 题必须答出「维尔汀」 |
-| 跨章汇总 | 第 2 题应调用图检索，答案跨多个剧情单元 |
-| 分块真的用了 P | `data/inputs/__parsed__/*.parsed/*.blocks.jsonl` 存在且 heading 层级正确 |
+四条硬性验收点见 [`AGENTS.md` §4.5](AGENTS.md#45-验收回归)。
 
 ### 6. 全量灌库
 
@@ -557,9 +279,21 @@ python pipeline/ingest.py --watch
 python pipeline/ingest.py --backfill
 ```
 
-全量 81 章实测约 112 分钟。已 PROCESSED 的章节：源文件重新铺入后
-扫描会判定为 `already processed` 并再次归档，**不会重复抽取**
-（`lightrag_llm_cache` 里已有缓存，重灌近乎全命中）。
+**预期规模与耗时**（用于评估磁盘和 API 预算）：
+
+| | 主线 16 章 | 全量 81 章 |
+|---|---|---|
+| 实体 / 关系 | 3,783 / 6,090 | **9,935 / 16,768** |
+| chunks | 837 | **2,439** |
+| LLM 抽取缓存 | 2,302 行 | **≈6,700 行** |
+| 数据库 | 212 MB | **560 MB** |
+| 耗时 | ≈27 分钟 | **≈112 分钟** |
+
+> 其中向量约占 423 MB（关系 234 + 实体 149 + chunk 40）——
+> 这也是为什么存储必须用 PG + pgvector，而不是文件型。
+
+已 PROCESSED 的章节源文件重新铺入后会被判为 `already processed` 并再次归档，
+**不会重复抽取**（缓存命中）。
 
 ---
 
@@ -567,41 +301,31 @@ python pipeline/ingest.py --backfill
 
 ```powershell
 python pipeline/update_index.py --check      # 上游有没有更新
-python pipeline/update_index.py --plan       # 看要动哪些章(只读)
+python pipeline/update_index.py --plan       # 看要动哪些章（只读）
 python pipeline/update_index.py --apply      # 执行
 ```
 
-**三条必须"先删后传"的理由**（均已在 LightRAG 源码核实）：同名上传返回 409、
+脚本封装了 delete → stage → scan → backfill → 更新 `corpus.lock.json` 全流程，
+删除时保持 `delete_llm_cache=False`，**未被改动的 chunk 重灌时直接命中缓存**。
+
+**必须"先删后传"**（均已在 LightRAG 源码核实）：同名上传返回 409、
 内容 hash 会被判重、`process_options`/`chunk_options` 在入队时就冻结。
-脚本已封装 delete → stage → scan → backfill → 更新 corpus.lock.json 全流程，
-且删除时保持 `delete_llm_cache=False`，**未被改动的 chunk 重灌时直接命中缓存**。
 
-### ⚠️ 布局变更熔断（这个语料真的发生过）
+> ⚠️ 这个语料的目录布局**结构性变过**（v1.1.0 的 1977 个单元文件 → v1.2.0 的 82 个章节文件），
+> 朴素 diff 会变成"删 81 加 1977"的灾难。`update_index.py` 因此内置**布局变更熔断**，
+> 详情与演练结果见 [`AGENTS.md` §4.3](AGENTS.md#43-增量更新游戏发新版本时)。
 
-本语料的目录布局**结构性变过**：
+改了清洗/渲染逻辑后需要刷新索引正文时，用 `pipeline/reindex.py`（详见 [AGENTS.md §4.4](AGENTS.md#44-强制重灌指定章节)）。
 
-| tag | 简中布局 | 文件数 |
-|---|---|---|
-| v1.0.0 / v1.0.1 | 无 `story_reader_linked/zh-CN` | 0 |
-| **v1.1.0** | `activity/chapter_11101/1110101-xxx.md` + `.json` | **1977** |
-| **v1.2.0**（当前） | `activity/11101-xxx.md` | **82** |
-
-也就是说从 v1.1.0 到 v1.2.0，维护者把"每章拆成多个剧情单元文件"
-改成了"整个活动一个文件"。**朴素的 diff 增量会变成"删 81 加 1977"的灾难。**
-
-所以 `update_index.py`：
-- 只认当前命名规范 `分类/数字-标题.md`
-- 文件数变化超过 30%（且 >10）或新版本匹配数为 0 时**直接熔断**（退出码 2），
-  提示改走全量重建，需 `--force-layout` 才强行增量
+---
 
 ## 后续可做
 
-- **上服务器**：启用 `deploy/nginx/` + 配 TLS；迁移只需 `pg_dump` + `data/inputs` + `state/`
-- **接上 UI**：直接用 LightRAG 原生 `/workspace`（问答）与 `/webui`（管理），
-  或按需自建前端
-- **调参**：`CHUNK_TOP_K`（整体梗概类问题调大）、`TOP_K`、`MIN_RERANK_SCORE`
-- **按角色继续省钱**：`.env` 里已给 `QUERY_OPENAI_LLM_EXTRA_BODY` 留了注释，
-  想换更快的回答可以打开（会略降归纳质量）
+- **上服务器**：Nginx + TLS；迁移只需 `pg_dump` + `data/inputs/` + `state/`
+- **接上 UI**：直接用 LightRAG 原生 `/workspace`（问答）与 `/webui`（管理）；
+  想换品牌可用 `UI_TEMPLATES_DIR`（compose 已挂好 `./data/ui_templates`），**无需重建前端**
+- **查询规划器**：宽泛聚合类问题（如「2.0~3.0 之间有哪些重大事件」）的瓶颈是
+  `max_total_tokens` 而非 `chunk_top_k`，可按问题类型自动调参。见 [AGENTS.md §6](AGENTS.md#6-已知未修问题)
 
 ---
 
@@ -612,3 +336,13 @@ python pipeline/update_index.py --apply      # 执行
 | **本仓库代码**（`pipeline/` `scripts/` `deploy/` 等） | [MIT](LICENSE) |
 | **剧情文本** | 版权归其权利人所有。本仓库**不含**语料原文 —— 语料独立 clone 且被 `.gitignore` 排除，仅用于本地个人检索 |
 | **上游 LightRAG** | `LightRAG/` 为独立 clone，遵循其自身许可（MIT），不纳入本仓库 |
+
+---
+
+## 相关文档
+
+| 文档 | 内容 |
+|---|---|
+| [`AGENTS.md`](AGENTS.md) | 操作铁律、环境修复记录、配置与行为坑、数据可信度、操作手册、已知未修问题 |
+| [`流程与架构.md`](流程与架构.md) | 分层架构、数据流、五个关键决策、部署形态、里程碑 M0-M8 |
+| [`docs/RAG选型报告.md`](docs/RAG选型报告.md) | 为什么选 LightRAG，与其他框架的对比 |
