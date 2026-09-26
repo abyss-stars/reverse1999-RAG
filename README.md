@@ -324,8 +324,8 @@ python pipeline/update_index.py --apply      # 执行
 - **上服务器**：Nginx + TLS；迁移只需 `pg_dump` + `data/inputs/` + `state/`
 - **接上 UI**：直接用 LightRAG 原生 `/workspace`（问答）与 `/webui`（管理）；
   想换品牌可用 `UI_TEMPLATES_DIR`（compose 已挂好 `./data/ui_templates`），**无需重建前端**
-- **查询规划器**：宽泛聚合类问题（如「2.0~3.0 之间有哪些重大事件」）的瓶颈是
-  `max_total_tokens` 而非 `chunk_top_k`，可按问题类型自动调参。见 [AGENTS.md §6](AGENTS.md#6-已知未修问题)
+- **检索预设**：已内置五档（精确定位 / 专名检索 / 关系链 / 广域扫掠 / 快速应答），
+  参数经实测标定。可显示在前端供用户选择，见 [`next.md`](next.md) 与 [`docs/检索调参.md`](docs/检索调参.md)
 
 ---
 
@@ -343,6 +343,8 @@ python pipeline/update_index.py --apply      # 执行
 
 | 文档 | 内容 |
 |---|---|
+| [`next.md`](next.md) | **接手必读**：当前状态、下一步该做什么、待决策问题 |
 | [`AGENTS.md`](AGENTS.md) | 操作铁律、环境修复记录、配置与行为坑、数据可信度、操作手册、已知未修问题 |
 | [`流程与架构.md`](流程与架构.md) | 分层架构、数据流、五个关键决策、部署形态、里程碑 M0-M8 |
+| [`docs/检索调参.md`](docs/检索调参.md) | 五个检索预设的参数是怎么标定的，以及怎么重新标定 |
 | [`docs/RAG选型报告.md`](docs/RAG选型报告.md) | 为什么选 LightRAG，与其他框架的对比 |
