@@ -564,7 +564,10 @@ python pipeline/update_index.py --apply      # 执行
 
 ---
 
-## 版权
+## 版权与许可
 
-剧情文本版权归其权利人所有。本仓库**不含**语料原文 —— 语料独立 clone 且被
-`.gitignore` 排除，仅用于本地个人检索。
+| 范围 | 许可 / 归属 |
+|---|---|
+| **本仓库代码**（`pipeline/` `scripts/` `deploy/` 等） | [MIT](LICENSE) |
+| **剧情文本** | 版权归其权利人所有。本仓库**不含**语料原文 —— 语料独立 clone 且被 `.gitignore` 排除，仅用于本地个人检索 |
+| **上游 LightRAG** | `LightRAG/` 为独立 clone，遵循其自身许可（MIT），不纳入本仓库 |
