@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="zh-Hans" data-accent="gold">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1999 剧情档案 · v0 视觉稿</title>
+<!--
+  v0 视觉稿 —— P1 问答主页
+  目的：定方向，不是交付。内容多为占位/示例，标了 [占位] 的地方是刻意的。
+  规范来源：website.md §3 C 组（色板/排版/形状）与 D 组（版式）。
+  字体：与参考站同栈（Noto Serif SC / Cinzel / Roboto Mono / Lora）。
+        若 Google Fonts 不可达会回退到系统衬线（Songti SC / SimSun），版式不变。
+  美术：hero 背景取自 docs/ref/hero-art.png（第三方游戏美术，已 gitignore；上线必须替换）。
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;1,400&family=Noto+Serif+SC:wght@200;400;700;900&family=Roboto+Mono:wght@400&display=swap">
+
+<style>
+/* ============================================================
+   1. 设计令牌 —— 全部来自对参考站的实测（见 website.md C-1）
+   ============================================================ */
+:root{
+  /* 底色与外壳 */
+  --canvas:        #0F0F0F;   /* 页面底色（截图实测 40.5%） */
+  --canvas-deep:   #030303;   /* 顶栏/最深 */
+  --chrome:        #212121;   /* 页脚/外壳（截图实测 94.3%） */
+  --surface:       #1B1B1B;   /* 卡片填充 */
+  --surface-btn:   #111111;   /* 瓦片填充（参考站 .mp-btn 原值） */
+  --surface-btn-h: #333333;   /* 瓦片悬停（参考站原值） */
+  --infobox:       rgba(0,0,0,.816);  /* 参考站 .mp-infobox 原值 */
+
+  /* 强调与铜锈（参考站 CSS 原值） */
+  --accent:        #CF8D2D;   /* 主强调（截图实测 h≈36°） */
+  --accent-hi:     #E7A93C;   /* 派生：hover/聚焦 */
+  --accent-bar:    #FF9E34;   /* 参考站轮播指示条原值 */
+  --copper:        #B55829;   /* 参考站边框原值 */
+  --copper-deep:   #B85600;   /* 参考站日期装饰线原值 */
+
+  /* 文字 */
+  --ink:      #E7DBCF;  /* 正文暖米白（截图实测） */
+  --ink-2:    #B7B19F;  /* 次级 */
+  --cream:    #FFFDE9;  /* 瓦片标签（参考站原值） */
+  --muted:    #888888;
+  --muted-en: #666666;  /* 瓦片英文标签（参考站原值） */
+
+  --line:      rgba(181,88,41,.62);
+  --line-soft: rgba(255,255,255,.08);
+  --glow:      0 0 9px rgba(0,0,0,1);
+
+  /* 字体 */
+  --serif: "Noto Serif SC","Songti SC","SimSun",serif;
+  --sans:  "PingFang SC","Helvetica Neue","Microsoft YaHei","WenQuanYi Micro Hei",sans-serif;
+  --mono:  "Roboto Mono",ui-monospace,Consolas,monospace;
+  --latin: "Cinzel",var(--serif);
+
+  /* 形状：直角为主 + 一个签名圆角（参考站 .mp-infobox 原值） */
+  --radius-signature: 0 30px 0 0;
+  --sp: 4px;
+
+  /* 可在 Tweaks 面板调 */
+  --hero-h: 380px;
+  --veil: .92;
+  --grain: 1;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ background:var(--canvas); }
+body{
+  margin:0;
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.75;
+  text-wrap:pretty;
+  -webkit-font-smoothing:antialiased;
+
+  /* ── 整站背景（对标参考站：#rain-background 就是 body 级的重复背景图）──
+     用「多重背景」把遮罩直接叠在图上：渐变是第一层、图是第二层，
+     两层都在所有内容之下 —— 因此不需要任何 z-index 操作。 */
+  --bg-img:   url("../../docs/ref/1999.jpg");
+  --bg-pos-x: 50%;      /* 已定：单张铺满 · 位置 X 50% */
+  --bg-pos-y: center;
+  --scrim:    0.92;     /* 已定：背景明暗 0.92（遮罩倍数） */
+  background-color:var(--canvas);
+  background-image:
+    linear-gradient(180deg,
+      rgba(6,6,6,calc(.88 * var(--scrim))) 0px,
+      rgba(6,6,6,calc(.60 * var(--scrim))) 180px,
+      rgba(6,6,6,calc(.38 * var(--scrim))) 380px,   /* hero 内留出透气窗，让美术真正可见 */
+      rgba(6,6,6,calc(.80 * var(--scrim))) 480px,   /* 内容区开始，压实以保证小字可读 */
+      rgba(6,6,6,calc(.90 * var(--scrim))) 720px,
+      rgba(6,6,6,calc(.93 * var(--scrim))) 100%),
+    var(--bg-img);
+  /* 已定：单张铺满。两层用不同 attachment 是有意的 ——
+     美术固定于视口（fixed，滚动时不跟着跑），遮罩跟随文档高度（scroll，
+     让「hero 透气窗 / 内容区压实」始终对着内容，而不是对着屏幕）。 */
+  background-repeat:no-repeat, no-repeat;
+  background-position:center top, var(--bg-pos-x) var(--bg-pos-y);
+  background-size:100% 100%, cover;
+  background-attachment:scroll, fixed;
+}
+button,input{ font:inherit; color:inherit; }
+a{ color:inherit; text-decoration:none; }
+:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+/* 颗粒纹理（参考站的印刷/油画颗粒感） */
+body::after{
+  content:""; position:fixed; inset:0; z-index:99; pointer-events:none;
+  opacity:calc(.05 * var(--grain));
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.wrap{ max-width:1240px; margin:0 auto; padding:0 24px; min-width:0; }
+.en{ font-family:var(--latin); letter-spacing:.16em; text-transform:uppercase; }
+.mono{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
+
+/* ============================================================
+   2. 双层头部（对标参考站的 huiji 条 + 站点头部/导航条）
+   ============================================================ */
+.strip{
+  background:var(--canvas-deep); border-bottom:1px solid var(--line-soft);
+  font-size:11px; color:var(--muted);
+}
+.strip .wrap{ height:34px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.strip .brand-en{ color:var(--ink-2); font-size:11px; }
+.strip .src{ color:var(--muted); }
+.strip .src b{ color:var(--accent); font-weight:400; }
+
+.topbar{
+  position:sticky; top:0; z-index:50;
+  background:rgba(27,27,27,.94);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+}
+.topbar .wrap{ height:56px; display:flex; align-items:center; gap:16px; min-width:0; }
+.mark{ width:26px; height:26px; flex:none; color:var(--accent); }
+.site-name{ font-family:var(--serif); font-weight:700; font-size:17px; color:var(--cream); letter-spacing:.02em; white-space:nowrap; }
+.site-sub{ font-size:10px; color:var(--muted-en); padding-left:12px; border-left:1px solid var(--line-soft); white-space:nowrap; }
+.topnav{ margin-left:auto; display:flex; align-items:center; gap:24px; font-size:13px; color:var(--ink-2);
+  flex-wrap:wrap; justify-content:flex-end; min-width:0; }
+.topnav a{ position:relative; padding:4px 0; transition:color .15s; }
+.topnav a::after{
+  content:""; position:absolute; left:0; right:100%; bottom:0; height:1px;
+  background:var(--accent); transition:right .18s cubic-bezier(.2,.7,.2,1);
+}
+.topnav a:hover{ color:var(--cream); }
+.topnav a:hover::after{ right:0; }
+.topnav a[aria-current]{ color:var(--accent); }
+.tbtn{
+  background:var(--surface-btn); border:1px solid var(--line); color:var(--ink-2);
+  padding:5px 12px; font-size:12px; cursor:pointer; transition:.15s;
+}
+.tbtn:hover{ background:var(--surface-btn-h); color:var(--cream); }
+
+/* ============================================================
+   3. Hero —— 整站背景已提供美术，hero 只负责让左侧文字可读
+   ============================================================ */
+.hero{ position:relative; height:var(--hero-h); min-height:300px; overflow:hidden; border-bottom:1px solid var(--line); }
+.hero::after{
+  content:""; position:absolute; inset:0;
+  background:
+    linear-gradient(90deg,
+      rgba(6,6,6,calc(.90 * var(--veil))) 0%,
+      rgba(6,6,6,calc(.72 * var(--veil))) 32%,
+      rgba(6,6,6,calc(.30 * var(--veil))) 62%,
+      rgba(6,6,6,0) 100%),
+    linear-gradient(180deg, rgba(6,6,6,.42) 0%, transparent 34%, transparent 72%, rgba(6,6,6,.62) 100%);
+}
+.hero .wrap{
+  position:relative; z-index:2; height:100%;
+  display:grid; grid-template-columns:minmax(0,1fr) 352px; gap:40px; align-items:center;
+}
+
+.hero-title-en{ font-size:12px; color:var(--accent); margin:0 0 6px; }
+.hero h1{
+  margin:0;
+  font-family:var(--serif); font-weight:900;
+  font-size:clamp(38px,5.4vw,66px); line-height:1.04; letter-spacing:.02em;
+  color:var(--cream);
+  text-shadow:0 0 20px #000, 0 2px 10px rgba(0,0,0,.85);
+  filter:drop-shadow(0 0 5px rgba(255,255,255,.16));
+}
+.hero-sub{ margin:8px 0 0; font-family:var(--serif); font-size:15px; color:var(--ink-2); text-shadow:0 0 20px #000; }
+
+/* 日期块 —— 对标参考站 .mp-signin-* */
+.dateblock{ display:flex; align-items:flex-start; gap:10px; margin-top:18px; position:relative; }
+.dateblock::after{  /* 参考站的铜色装饰线 */
+  content:""; position:absolute; left:-4px; bottom:2px; width:112px; height:.62em;
+  background:var(--copper-deep); opacity:.9; z-index:0;
+}
+.db-day{ font-family:var(--serif); font-weight:800; font-size:36px; line-height:1; text-shadow:0 0 20px #000; position:relative; z-index:1; }
+.db-col{ display:flex; flex-direction:column; position:relative; z-index:1; }
+.db-today{ font-family:var(--serif); font-weight:800; font-size:16px; color:var(--accent); line-height:1.05; }
+.db-rest{ font-size:11px; color:var(--muted); font-family:var(--mono); line-height:1.3; }
+
+.quote{ margin-top:16px; max-width:600px; font-family:var(--serif); font-size:15px; color:var(--ink); text-shadow:0 1px 1px #000; }
+.quote cite{ display:block; margin-top:4px; font-style:normal; font-size:12px; color:var(--muted); font-family:var(--mono); }
+
+/* 索引概况卡 —— 签名圆角 0 30px 0 0 + 铜色细边 */
+.infobox{
+  background:var(--infobox); border:1px solid var(--copper);
+  border-radius:var(--radius-signature); padding:18px 20px 16px;
+  font-size:14px; backdrop-filter:blur(2px);
+}
+.infobox h2{ margin:0 0 12px; font-family:var(--serif); font-size:17px; font-weight:700; color:var(--cream); }
+.infobox h2 small{ display:block; margin-top:2px; font-family:var(--latin); font-size:10px; letter-spacing:.14em; color:var(--muted-en); font-weight:400; }
+.stat{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:5px 0; border-bottom:1px dotted rgba(181,88,41,.34); }
+.stat:last-of-type{ border-bottom:0; }
+.stat dt{ color:var(--ink-2); font-size:13px; }
+.stat dd{ margin:0; font-family:var(--mono); font-size:15px; color:var(--accent); }
+.infobox .note{ margin:10px 0 0; font-size:11px; color:var(--muted); line-height:1.5; }
+
+/* ============================================================
+   4. 检索区
+   ============================================================ */
+.search{ padding:26px 0 0; }
+.search-row{ display:flex; gap:10px; }
+.field{ flex:1; display:flex; align-items:center; gap:10px;
+  background:rgba(0,0,0,.55); border:1px solid var(--line); padding:0 14px;
+  transition:border-color .15s, box-shadow .15s; }
+.field:focus-within{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent), 0 0 18px rgba(207,141,45,.18); }
+.field svg{ width:18px; height:18px; flex:none; color:var(--accent); }
+.field input{ flex:1; background:none; border:0; outline:none; padding:15px 0; font-size:15px; }
+.field input::placeholder{ color:var(--muted); }
+.ask{
+  background:var(--surface-btn); border:1px solid var(--accent); color:var(--accent);
+  padding:0 24px; font-family:var(--serif); font-weight:700; font-size:15px; cursor:pointer;
+  box-shadow:var(--glow); transition:.15s;
+}
+.ask:hover{ background:var(--surface-btn-h); color:var(--accent-hi); border-color:var(--accent-hi); }
+
+/* ============================================================
+   5. 预设瓦片（对标参考站 .mp-btn：直角/#111/9px 黑晕/悬停 #333/英文标签旋转 90°）
+   ============================================================ */
+.presets{ padding:20px 0 0; }
+.sec-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; flex-wrap:wrap; min-width:0; }
+.sec-head h2{ margin:0; font-family:var(--serif); font-size:15px; font-weight:700; color:var(--cream); white-space:nowrap; }
+.sec-head span{ font-size:11px; color:var(--muted); }
+.sec-head .en{ font-size:10px; color:var(--muted); white-space:nowrap; }
+
+.preset-grid{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+.preset{
+  position:relative; text-align:left; cursor:pointer;
+  background:var(--surface-btn); border:1px solid transparent;
+  box-shadow:var(--glow); padding:14px 30px 12px 12px;
+  display:flex; flex-direction:column; gap:8px; min-height:172px;
+  transition:background .18s, border-color .18s, transform .18s;
+}
+.preset:hover{ background:var(--surface-btn-h); transform:translateY(-1px); }
+.preset[aria-pressed="true"]{ border-color:var(--accent); background:#1a1613; }
+.preset .ico{ width:30px; height:30px; color:var(--ink); filter:drop-shadow(0 2px 3px rgba(255,255,255,.28)); }
+.preset[aria-pressed="true"] .ico{ color:var(--accent); }
+.preset .label{ font-family:var(--serif); font-weight:700; font-size:15px; color:var(--cream); }
+.preset .sum{ font-size:12px; color:var(--ink-2); line-height:1.55; flex:1; }
+.preset .meta{ font-family:var(--mono); font-size:10.5px; color:var(--muted); border-top:1px solid var(--line-soft); padding-top:7px; }
+.preset .meta b{ color:var(--accent); font-weight:400; }
+.preset .en-tag{
+  position:absolute; top:13px; right:8px; font-family:var(--latin); font-size:9px;
+  letter-spacing:.12em; color:var(--muted-en); writing-mode:vertical-rl;
+  line-height:1; user-select:none; pointer-events:none;
+}
+
+/* 指示条 —— 复用参考站轮播指示条母题（2px，激活 4px） */
+.bars{ display:flex; gap:1px; margin-top:10px; }
+.bars i{ flex:1; height:2px; background:rgba(255,158,52,.32); transition:height .2s; }
+.bars i.on{ height:4px; background:var(--accent-bar); }
+
+/* ============================================================
+   6. 状态行 + 答案区
+   ============================================================ */
+.status{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:22px; font-size:11.5px; }
+.chip{ border:1px solid var(--line-soft); color:var(--muted); padding:3px 10px; }
+.chip.done{ color:var(--ink-2); border-color:rgba(181,88,41,.45); }
+.chip.on{ color:var(--accent); border-color:var(--accent); }
+.status .spent{ margin-left:auto; font-family:var(--mono); color:var(--muted); }
+
+.answer{ padding:16px 0 0; display:grid; grid-template-columns:minmax(0,1fr) 336px; gap:20px; align-items:start; }
+.card{ background:rgba(8,8,8,.74); border:1px solid var(--line); backdrop-filter:blur(3px); }
+.card-head{ display:flex; align-items:center; gap:10px; padding:12px 18px; border-bottom:1px solid var(--line-soft);
+  font-size:12px; color:var(--muted); flex-wrap:wrap; min-width:0; }
+.card-head .q{ font-family:var(--serif); font-size:14px; color:var(--cream); min-width:0; word-break:break-word; }
+.card-head .tag{ margin-left:auto; border:1px solid var(--line); color:var(--accent); padding:2px 8px; font-size:10.5px; font-family:var(--mono); }
+.ans-body{ padding:20px 22px 24px; max-width:68ch; }
+.ans-body p{ margin:0 0 14px; }
+.ph{ color:var(--ink); }
+.cite{
+  display:inline-block; min-width:19px; text-align:center; margin:0 2px;
+  font-family:var(--mono); font-size:10.5px; color:var(--accent);
+  border:1px solid var(--line); padding:0 3px; vertical-align:2px; cursor:pointer;
+}
+.cite:hover{ border-color:var(--accent); background:rgba(207,141,45,.12); }
+.ph-note{ font-size:11.5px; color:var(--muted); border:1px dashed rgba(181,88,41,.55); padding:8px 12px; }
+
+.readout{ padding:9px 18px; border-top:1px solid var(--line-soft); font-family:var(--mono); font-size:10.5px; color:var(--muted); }
+
+/* 引用面板 */
+.refs h3{ margin:0; padding:12px 18px; border-bottom:1px solid var(--line-soft); font-family:var(--serif); font-size:14px; color:var(--cream); }
+.ref{ padding:14px 18px; border-bottom:1px solid var(--line-soft); }
+.ref:last-child{ border-bottom:0; }
+.ref .top{ display:flex; gap:8px; align-items:baseline; font-size:12px; flex-wrap:wrap; min-width:0; }
+.ref .no{ font-family:var(--mono); color:var(--accent); }
+.ref .file{ color:var(--ink); font-family:var(--mono); font-size:11.5px; min-width:0; word-break:break-all; }
+.ref .where{ font-size:11px; color:var(--muted); margin-top:2px; }
+.ref .snip{ margin-top:8px; font-family:var(--serif); font-size:13px; color:var(--ink-2); line-height:1.7; }
+.ref .ver{ display:inline-block; margin-top:8px; font-size:10px; font-family:var(--mono); color:var(--ink-2); background:#1e2f27; padding:1px 7px 2px; border-radius:0 8px 0 0; }
+
+/* ============================================================
+   7. 页脚
+   ============================================================ */
+footer{ margin-top:56px; background:var(--chrome); border-top:1px solid var(--line); }
+.foot-stats{ display:flex; gap:38px; flex-wrap:wrap; padding:26px 0 20px; }
+.foot-stats .n{ font-family:var(--mono); font-size:20px; color:var(--accent); line-height:1.2; }
+.foot-stats .l{ font-size:11.5px; color:var(--muted); }
+.foot-cols{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; padding:8px 0 22px; border-top:1px solid var(--line-soft); }
+.foot-cols h4{ margin:16px 0 8px; font-family:var(--serif); font-size:13.5px; color:var(--cream); }
+.foot-cols li{ list-style:none; font-size:12px; color:var(--ink-2); line-height:2; }
+.foot-cols ul{ margin:0; padding:0; }
+.legal{ border-top:1px solid var(--line-soft); padding:16px 0 34px; font-size:11.5px; color:var(--muted); line-height:1.9; }
+.legal b{ color:var(--ink-2); font-weight:400; }
+
+/* ============================================================
+   8. Tweaks 面板（默认完全隐藏）
+   ============================================================ */
+.tweaks{
+  position:fixed; right:18px; bottom:18px; z-index:120; width:288px;
+  background:rgba(12,12,12,.97); border:1px solid var(--copper);
+  border-radius:var(--radius-signature); box-shadow:0 12px 40px rgba(0,0,0,.7);
+  font-size:12px; overflow:hidden;
+}
+.tweaks[hidden]{ display:none; }
+.tweaks header{ display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; border-bottom:1px solid var(--line-soft); font-family:var(--serif); color:var(--cream); }
+.tweaks header button{ background:none; border:0; color:var(--muted); cursor:pointer; font-size:16px; line-height:1; }
+.tweaks .body{ padding:12px 14px 14px; max-height:70vh; overflow:auto; }
+.tweaks .grp{ margin-bottom:14px; }
+.tweaks .grp > label{ display:block; color:var(--ink-2); margin-bottom:6px; font-size:11.5px; }
+.tweaks .row{ display:flex; gap:6px; align-items:center; }
+.tweaks .row.wrap{ flex-wrap:wrap; }
+.tweaks .row.wrap .sw{ flex:1 1 calc(33.333% - 6px); }
+.tweaks button.sw{ flex:1; background:var(--surface-btn); border:1px solid var(--line-soft); color:var(--ink-2); padding:6px; cursor:pointer; font-size:11.5px; }
+.tweaks button.sw[aria-pressed="true"]{ border-color:var(--accent); color:var(--accent); }
+.tweaks input[type=range]{ width:100%; accent-color:var(--accent); }
+.tweaks ul{ margin:6px 0 0; padding-left:16px; color:var(--muted); line-height:1.75; font-size:11px; }
+.tweaks .divider{ height:1px; background:var(--line-soft); margin:14px 0; }
+
+/* ============================================================
+   9. 响应式
+   ============================================================ */
+@media (max-width:1100px){
+  .hero .wrap{ grid-template-columns:minmax(0,1fr); gap:20px; }
+  .infobox{ display:none; }             /* 窄屏收起概况卡，避免压住美术 */
+  .preset-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .answer{ grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:760px){
+  :root{ --hero-h:320px; }
+  .wrap{ padding:0 16px; }
+  /* 顶栏允许干净换行：固定高度会在换行时压住内容 */
+  .strip .wrap{ height:auto; padding:7px 16px; }
+  .strip .brand-en{ font-size:10px; letter-spacing:.1em; }
+  .site-sub,.strip .src{ display:none; }
+  .topbar .wrap{ height:auto; padding:9px 16px; flex-wrap:wrap; row-gap:8px; }
+  .topnav{ gap:12px; font-size:11.5px; }
+  .topnav a::after{ display:none; }
+  .tbtn{ padding:4px 9px; font-size:11.5px; }
+  /* 整站背景的 cover + fixed 已是全局默认，窄屏无需再覆盖（位置 X 沿用 50%） */
+  .hero::after{
+    background:linear-gradient(180deg,
+      rgba(6,6,6,calc(.90 * var(--veil))) 0%,
+      rgba(6,6,6,calc(.70 * var(--veil))) 55%,
+      rgba(6,6,6,calc(.55 * var(--veil))) 100%);
+  }
+  .preset-grid{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; padding-bottom:6px; }
+  .preset{ min-width:216px; scroll-snap-align:start; }
+  .foot-cols{ grid-template-columns:1fr; }
+  .foot-stats{ gap:22px; }
+  .ans-body{ padding:16px; }
+  .sec-head span:last-child{ font-size:10.5px; }
+}
+@media (prefers-reduced-motion:reduce){
+  *{ transition:none !important; animation:none !important; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ── 顶层信息条 ─────────────────────────────────────────── -->
+<div class="strip">
+  <div class="wrap">
+    <span class="brand-en en">Reverse: 1999 · Story Archive</span>
+    <span class="src">数据来源：本地 LightRAG 索引 · <b>81</b> 章 · <b>2,439</b> 文本块</span>
+  </div>
+</div>
+
+<!-- ── 站点头部 + 导航 ────────────────────────────────────── -->
+<header class="topbar">
+  <div class="wrap">
+    <!-- 自绘几何标记（非参考站 Logo） -->
+    <svg class="mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+      <path d="M16 3 29 16 16 29 3 16Z"/>
+      <path d="M16 8.5 23.5 16 16 23.5 8.5 16Z" opacity=".55"/>
+      <path d="M16 3v26M3 16h26" opacity=".3"/>
+      <circle cx="16" cy="16" r="2.4" fill="currentColor" stroke="none"/>
+    </svg>
+    <span class="site-name">1999 剧情档案</span>
+    <span class="site-sub en">Story Archive</span>
+
+    <nav class="topnav">
+      <a href="#" aria-current="page">检索</a>
+      <a href="#">章节档案</a>
+      <a href="#">关于</a>
+      <button class="tbtn" id="tweaksOpen">Tweaks</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- ── Hero ────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <p class="hero-title-en en">Reverse: 1999 — Simplified Chinese Story Index</p>
+        <h1>剧情档案</h1>
+        <p class="hero-sub">把 81 章剧情当作一份可检索的档案，而不是一份目录。</p>
+
+        <div class="dateblock">
+          <span class="db-day" id="dbMonth">--</span>
+          <span class="db-col">
+            <span class="db-today">TODAY</span>
+            <span class="db-rest">/</span>
+          </span>
+          <span class="db-day" id="dbDay">--</span>
+          <span class="db-col">
+            <span class="db-today" style="color:var(--ink-2)" id="dbDow">---</span>
+            <span class="db-rest" id="dbYear">----</span>
+          </span>
+        </div>
+
+        <!-- 台词：真实取自语料（13101 行至摩卢旁卡 · 副标题）。正式版按日轮换。 -->
+        <blockquote class="quote">
+          「而夜幕闪烁如故。」
+          <cite>—— 行至摩卢旁卡 · 副标题　[正式版：每日从语料 843 条副标题中轮换]</cite>
+        </blockquote>
+      </div>
+
+      <!-- 索引概况（数据全部来自 state/index_manifest.json，非占位） -->
+      <aside class="infobox">
+        <h2>索引概况<small>Index Overview</small></h2>
+        <dl style="margin:0">
+          <div class="stat"><dt>剧情章节</dt><dd>81</dd></div>
+          <div class="stat"><dt>图谱实体</dt><dd>9,896</dd></div>
+          <div class="stat"><dt>实体关系</dt><dd>16,737</dd></div>
+          <div class="stat"><dt>文本块</dt><dd>2,439</dd></div>
+          <div class="stat"><dt>抽取缓存</dt><dd>8,726</dd></div>
+        </dl>
+        <p class="note">全量已建索引并通过回归（10/10）。语料锁定 <span class="mono">f6e18439</span>。</p>
+      </aside>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <!-- ── 检索区 ────────────────────────────────────────── -->
+    <section class="search">
+      <div class="search-row">
+        <label class="field">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>
+          </svg>
+          <input id="q" placeholder="例：「这是我的箱子」是谁说的　·　回车即检索" autocomplete="off">
+        </label>
+        <button class="ask" id="ask">检索</button>
+      </div>
+    </section>
+
+    <!-- ── 预设瓦片（参数为 query_planner 实测值，非编造）── -->
+    <section class="presets">
+      <div class="sec-head">
+        <h2>检索档位</h2>
+        <span class="en">Retrieval Presets</span>
+        <span>· 选一个再提问；不确定就用「精确定位」</span>
+      </div>
+
+      <div class="preset-grid" id="presetGrid">
+        <button class="preset" data-preset="pinpoint" aria-pressed="true">
+          <span class="en-tag">Pinpoint</span>
+          <svg class="ico" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4">
+            <circle cx="16" cy="16" r="10"/><circle cx="16" cy="16" r="4"/><path d="M16 2v4M16 26v4M2 16h4M26 16h4"/>
+          </svg>
+          <span class="label">精确定位</span>
+          <span class="sum">某句话是谁说的，或某个具体事实。</span>
+          <span class="meta">naive · 检索 <b>低</b> · 花费 <b>低</b></span>
+        </button>
+
+        <button class="preset" data-preset="lookup" aria-pressed="false">
+          <span class="en-tag">Lookup</span>
+          <svg class="ico" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M6 5h13a3 3 0 0 1 3 3v19H9a3 3 0 0 1-3-3Z"/><path d="M22 8h4v19H12"/><path d="M11 12h7M11 17h7"/>
+          </svg>
+          <span class="label">专名检索</span>
+          <span class="sum">某个人物、组织或术语是什么。</span>
+          <span class="meta">local · 检索 <b>中</b> · 花费 <b>中</b></span>
+        </button>
+
+        <button class="preset" data-preset="chain" aria-pressed="false">
+          <span class="en-tag">Chain</span>
+          <svg class="ico" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M11 16h10"/><path d="M6 12l5 4-5 4ZM26 12l-5 4 5 4Z"/><circle cx="16" cy="16" r="2"/>
+          </svg>
+          <span class="label">关系链</span>
+          <span class="sum">谁和谁什么关系、为什么、先后顺序。</span>
+          <span class="meta">mix · 检索 <b>中高</b> · 花费 <b>高</b></span>
+        </button>
+
+        <button class="preset" data-preset="sweep" aria-pressed="false">
+          <span class="en-tag">Sweep</span>
+          <svg class="ico" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M4 26h24"/><path d="M6 26 14 6M12 26 18 6M18 26 22 6M24 26 26 6"/>
+          </svg>
+          <span class="label">广域扫掠</span>
+          <span class="sum">有哪些、完整经历、某版本区间发生了什么。</span>
+          <span class="meta">naive · 检索 <b>低</b> · 花费 <b>最高</b></span>
+        </button>
+
+        <button class="preset" data-preset="quick" aria-pressed="false">
+          <span class="en-tag">Quick</span>
+          <svg class="ico" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M17 3 7 18h7l-1 11 11-16h-7Z"/>
+          </svg>
+          <span class="label">快速应答</span>
+          <span class="sum">连续追问、流式输出等延迟敏感场景。</span>
+          <span class="meta">naive · 检索 <b>最低</b> · 花费 <b>最低</b></span>
+        </button>
+      </div>
+      <div class="bars" id="bars"><i class="on"></i><i></i><i></i><i></i><i></i></div>
+    </section>
+
+    <!-- ── 状态行 ────────────────────────────────────────── -->
+    <div class="status">
+      <span class="chip done">抽关键词</span>
+      <span class="chip done">检索</span>
+      <span class="chip done">重排</span>
+      <span class="chip on">生成中…</span>
+      <span class="spent">检索 2.9s　·　命中 21 章　·　39 chunks</span>
+    </div>
+
+    <!-- ── 答案区 ────────────────────────────────────────── -->
+    <section class="answer">
+      <article class="card">
+        <div class="card-head">
+          <span class="q">「这是我的箱子」是谁说的？</span>
+          <span class="tag">pinpoint</span>
+        </div>
+        <div class="ans-body">
+          <p class="ph-note">[占位] 答案正文由 <span class="mono">/query/stream</span> 流式写入，逐字渲染。以下是版式预览，不是真实回答。</p>
+          <p class="ph" style="margin-top:14px">
+            正文以暖米白 <span class="mono">#E7DBCF</span> 呈现，行高 1.75，最大宽度 68ch——
+            长答案是这个站的主要阅读对象，所以排版优先级高于装饰。行内引用用角标锚定
+            <span class="cite">1</span><span class="cite">2</span>，
+            点角标高亮右侧对应卡片。<span style="color:var(--muted)">[占位文本，非真实答案]</span>
+          </p>
+          <p class="ph">第二段用于检查段间距与引用的节奏感。</p>
+        </div>
+        <div class="readout">response_time 12.3s　·　retrieval 2.9s　·　generation 9.4s　·　llm_generated true</div>
+      </article>
+
+      <aside class="card refs">
+        <h3>引用（2）<span class="en" style="font-size:9.5px;color:var(--muted-en)"> References</span></h3>
+        <div class="ref">
+          <div class="top"><span class="no">[1]</span><span class="file">101-在我们的时代里.md</span></div>
+          <div class="where">第 1 章 · 10101 恶童坏种 · 主线</div>
+          <div class="snip">「他们需要一些惩戒，当然，是在道德与法律的框架之内。」</div>
+          <span class="ver">v1.0 · metadata</span>
+        </div>
+        <div class="ref">
+          <div class="top"><span class="no">[2]</span><span class="file">114-应门者.md</span></div>
+          <div class="where">第 14 章 · 主线</div>
+          <div class="snip">「在湖中央，他看见一只裹着白缎的手，手中握着一把极好的剑。」</div>
+          <span class="ver">v4.0 · metadata</span>
+        </div>
+        <div class="ref" style="padding-top:12px">
+          <div class="where">[占位] 片段取自本地语料的「副标题」行，用于验证引用卡的密度与可读性。</div>
+        </div>
+      </aside>
+    </section>
+  </div>
+</main>
+
+<!-- ── 页脚 ─────────────────────────────────────────────── -->
+<footer>
+  <div class="wrap">
+    <div class="foot-stats">
+      <div><div class="n">81</div><div class="l">剧情章节</div></div>
+      <div><div class="n">2,439</div><div class="l">文本块</div></div>
+      <div><div class="n">9,896</div><div class="l">图谱实体</div></div>
+      <div><div class="n">16,737</div><div class="l">实体关系</div></div>
+      <div><div class="n">10/10</div><div class="l">回归通过</div></div>
+    </div>
+
+    <div class="foot-cols">
+      <div>
+        <h4>本工具</h4>
+        <ul>
+          <li>检索档位与参数标定</li>
+          <li>章节档案与版本</li>
+          <li>数据可信度说明</li>
+        </ul>
+      </div>
+      <div>
+        <h4>数据来源</h4>
+        <ul>
+          <li>本地 LightRAG 索引（PostgreSQL 四件套）</li>
+          <li>语料 f6e18439 · 81 章</li>
+          <li>抽取模型 deepseek-flash</li>
+        </ul>
+      </div>
+      <div>
+        <h4>声明</h4>
+        <ul>
+          <li>非官方 · 个人自用检索工具</li>
+          <li>游戏资源版权归深蓝互动</li>
+          <li>设计风格致敬灰机 wiki</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="legal">
+      <b>版权与免责。</b>本站为个人自用的剧情检索工具，<b>非官方站点</b>，不代表官方立场。
+      语料正文与其中涉及的游戏资源（角色、美术、术语）版权归 <b>深蓝互动</b> 所有，本站仅用于本地检索与呈现。
+      界面设计风格参考自灰机 wiki《重返未来1999》首页，但<b>未复制其任何美术资产</b>（首页图标等由该站作者持有并声明禁止他用）。
+      正式上线前，整站背景将替换为自制素材。
+      <br>v0 视觉稿 · 内容含占位与示例 · 生成于 <span class="mono" id="buildDate">----</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Tweaks（默认隐藏）────────────────────────────────── -->
+<aside class="tweaks" id="tweaks" hidden>
+  <header>
+    <span>Tweaks</span>
+    <button id="tweaksClose" aria-label="关闭">×</button>
+  </header>
+  <div class="body">
+    <div class="grp">
+      <label>整站背景图源（含你试过的那几张）</label>
+      <div class="row wrap">
+        <button class="sw" id="bg1999" aria-pressed="true">1999</button>
+        <button class="sw" id="bg19999" aria-pressed="false">19999 (2)</button>
+        <button class="sw" id="bg19r99" aria-pressed="false">19r99</button>
+        <button class="sw" id="bgQu" aria-pressed="false">曲娘</button>
+        <button class="sw" id="bgNone" aria-pressed="false">纯色</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <label>铺法</label>
+      <div class="row">
+        <button class="sw" id="bgTile" aria-pressed="false">平铺 · wiki 式</button>
+        <button class="sw" id="bgCover" aria-pressed="true">单张铺满 ✓</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <label>背景明暗 · 遮罩倍数 <span class="mono" id="scrimVal">0.92</span></label>
+      <input type="range" id="scrim" min="0.4" max="1.3" step="0.01" value="0.92">
+    </div>
+
+    <div class="grp">
+      <label>背景位置 X <span class="mono" id="bgxVal">50%</span></label>
+      <input type="range" id="bgx" min="0" max="100" step="1" value="50">
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="grp">
+      <label>强调色（已定：琥珀金）</label>
+      <div class="row">
+        <button class="sw" id="swGold" aria-pressed="true">琥珀金 #CF8D2D ✓</button>
+        <button class="sw" id="swOrange" aria-pressed="false">亮橙 #FF7A06</button>
+      </div>
+    </div>
+
+    <div class="grp">
+      <label>Hero 左侧遮罩强度 <span class="mono" id="veilVal">0.92</span></label>
+      <input type="range" id="veil" min="0.55" max="1" step="0.01" value="0.92">
+    </div>
+
+    <div class="grp">
+      <label>Hero 高度 <span class="mono" id="heroVal">380px</span></label>
+      <input type="range" id="heroH" min="260" max="520" step="4" value="380">
+    </div>
+
+    <div class="grp">
+      <label>颗粒纹理</label>
+      <div class="row">
+        <button class="sw" id="grainOn" aria-pressed="true">开</button>
+        <button class="sw" id="grainOff" aria-pressed="false">关</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <label style="color:var(--ink-2)">v0 的假设（请逐条确认）</label>
+    <ul>
+      <li>只做深色，不做浅色主题</li>
+      <li>整站背景用官方美术（本地自用）；上线换自制</li>
+      <li>预设由用户手选，不做自动分类</li>
+      <li>引用面板桌面常驻、移动端转抽屉</li>
+      <li>答案区优先阅读性，装饰克制</li>
+      <li>字体走 Google Fonts，不可达则回退系统衬线</li>
+    </ul>
+  </div>
+</aside>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* 日期块：真实当前日期，格式沿用参考站（MM / TODAY · DD / DOW.YYYY） */
+  function pad(n){ return n < 10 ? '0' + n : '' + n; }
+  var now = new Date();
+  var dows = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  $('dbMonth').textContent = pad(now.getMonth() + 1);
+  $('dbDay').textContent   = pad(now.getDate());
+  $('dbDow').textContent   = dows[now.getDay()];
+  $('dbYear').textContent  = now.getFullYear();
+  $('buildDate').textContent = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate());
+
+  /* ── 整站背景测试台 ───────────────────────────────────── */
+  var bgImgs = {
+    q1999:  'url("../../docs/ref/1999.jpg")',
+    q19999: 'url("../../docs/ref/19999 (2).jpg")',
+    q19r99: 'url("../../docs/ref/19r99.jpg")',
+    qu:     'url("../../docs/ref/bg-quniang.jpg")',
+    none:   'none'
+  };
+  var bgBtns = ['bg1999','bg19999','bg19r99','bgQu','bgNone'];
+  function setBgImg(id, key){
+    document.body.style.setProperty('--bg-img', bgImgs[key]);
+    bgBtns.forEach(function(b){ $(b).setAttribute('aria-pressed', b === id ? 'true' : 'false'); });
+  }
+  $('bg1999').addEventListener('click',  function(){ setBgImg('bg1999','q1999'); });
+  $('bg19999').addEventListener('click', function(){ setBgImg('bg19999','q19999'); });
+  $('bg19r99').addEventListener('click', function(){ setBgImg('bg19r99','q19r99'); });
+  $('bgQu').addEventListener('click',    function(){ setBgImg('bgQu','qu'); });
+  $('bgNone').addEventListener('click',  function(){ setBgImg('bgNone','none'); });
+
+  function applyBgLayout(tile){
+    var b = document.body.style, x = $('bgx').value + '%';
+    if (tile){
+      b.backgroundSize = '100% 100%, 100% auto';
+      b.backgroundRepeat = 'no-repeat, repeat-y';
+      b.backgroundAttachment = 'scroll, scroll';
+      b.backgroundPosition = 'center top, ' + x + ' center';
+    } else {
+      b.backgroundSize = '100% 100%, cover';
+      b.backgroundRepeat = 'no-repeat, no-repeat';
+      b.backgroundAttachment = 'scroll, fixed';
+      b.backgroundPosition = 'center top, ' + x + ' center';
+    }
+    $('bgTile').setAttribute('aria-pressed', tile ? 'true' : 'false');
+    $('bgCover').setAttribute('aria-pressed', tile ? 'false' : 'true');
+  }
+  $('bgTile').addEventListener('click',  function(){ applyBgLayout(true); });
+  $('bgCover').addEventListener('click', function(){ applyBgLayout(false); });
+
+  $('scrim').addEventListener('input', function(e){
+    document.body.style.setProperty('--scrim', e.target.value);
+    $('scrimVal').textContent = Number(e.target.value).toFixed(2);
+  });
+  $('bgx').addEventListener('input', function(e){
+    $('bgxVal').textContent = e.target.value + '%';
+    document.body.style.backgroundPosition = 'center top, ' + e.target.value + '% center';
+  });
+
+  /* 预设选择 */
+  var presets = [].slice.call(document.querySelectorAll('.preset'));
+  var bars = [].slice.call(document.querySelectorAll('#bars i'));
+  presets.forEach(function(btn, i){
+    btn.addEventListener('click', function(){
+      presets.forEach(function(b){ b.setAttribute('aria-pressed','false'); });
+      bars.forEach(function(b){ b.classList.remove('on'); });
+      btn.setAttribute('aria-pressed','true');
+      if (bars[i]) bars[i].classList.add('on');
+      var tag = document.querySelector('.card-head .tag');
+      if (tag) tag.textContent = btn.dataset.preset;
+    });
+  });
+
+  /* Tweaks */
+  var panel = $('tweaks');
+  $('tweaksOpen').addEventListener('click', function(){ panel.hidden = false; });
+  $('tweaksClose').addEventListener('click', function(){ panel.hidden = true; });
+
+  var root = document.documentElement;
+  $('swGold').addEventListener('click', function(){
+    root.style.setProperty('--accent','#CF8D2D');
+    root.style.setProperty('--accent-hi','#E7A93C');
+    $('swGold').setAttribute('aria-pressed','true'); $('swOrange').setAttribute('aria-pressed','false');
+  });
+  $('swOrange').addEventListener('click', function(){
+    root.style.setProperty('--accent','#FF7A06');
+    root.style.setProperty('--accent-hi','#FFA24D');
+    $('swOrange').setAttribute('aria-pressed','true'); $('swGold').setAttribute('aria-pressed','false');
+  });
+  $('veil').addEventListener('input', function(e){
+    root.style.setProperty('--veil', e.target.value);
+    $('veilVal').textContent = e.target.value;
+  });
+  $('heroH').addEventListener('input', function(e){
+    root.style.setProperty('--hero-h', e.target.value + 'px');
+    $('heroVal').textContent = e.target.value + 'px';
+  });
+  $('grainOn').addEventListener('click', function(){
+    root.style.setProperty('--grain','1');
+    $('grainOn').setAttribute('aria-pressed','true'); $('grainOff').setAttribute('aria-pressed','false');
+  });
+  $('grainOff').addEventListener('click', function(){
+    root.style.setProperty('--grain','0');
+    $('grainOff').setAttribute('aria-pressed','true'); $('grainOn').setAttribute('aria-pressed','false');
+  });
+
+  /* 回车即检索：v0 无后端，仅做交互反馈 */
+  $('q').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') $('ask').click();
+  });
+  $('ask').addEventListener('click', function(){
+    var v = $('q').value.trim();
+    var q = document.querySelector('.card-head .q');
+    if (v && q) q.textContent = v;
+    document.querySelectorAll('.chip').forEach(function(c){ c.classList.remove('on'); });
+    var chips = document.querySelectorAll('.chip');
+    if (chips[2]) chips[2].classList.add('on');
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# 薄服务层（L3b）依赖 —— 精确钉版本，装在 server/.venv 里。
+#
+# 为什么不装进全局 Python：本机全局环境已有 9 处 pip 依赖冲突，
+# 其中 fastapi / starlette 的区间甚至不相交（gradio 要 starlette<1.0，
+# sse-starlette 要 >=0.49.1，而 fastapi 0.115.6 要 <0.42）。
+# 动全局环境会连累别的项目，所以本服务自带 venv。
+#
+# 建环境：
+#   python -m venv server/.venv
+#   server\.venv\Scripts\python.exe -m pip install -r server/requirements.txt
+#
+# 启动：
+#   server\.venv\Scripts\python.exe -m uvicorn server.app:app --host 127.0.0.1 --port 8787
+#
+# 版本组合已实测（FastAPI() 实例化 + StreamingResponse + StaticFiles + 全部测试通过）：
+#   fastapi 0.141.1 + starlette 1.7.0 + pydantic 2.13.5
+
+fastapi==0.141.1
+starlette==1.7.0
+pydantic==2.13.5
+uvicorn==0.54.0
+httpx==0.28.1

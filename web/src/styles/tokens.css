@@ -1,0 +1,51 @@
+/* ============================================================
+   设计令牌 —— 全部来自对灰机 wiki 首页的实测（见 website.md C-1）
+   换肤只需改这一个文件：其余 CSS 一律只引用变量，不写字面色值。
+   ============================================================ */
+:root {
+  /* 底色与外壳 */
+  --canvas: #0F0F0F;        /* 页面底色（截图实测 40.5%） */
+  --canvas-deep: #030303;   /* 顶栏/最深 */
+  --chrome: #212121;        /* 页脚外壳（截图实测 94.3%） */
+  --surface: #1B1B1B;       /* 卡片填充 */
+  --surface-btn: #111111;   /* 瓦片填充（参考站 .mp-btn 原值） */
+  --surface-btn-h: #333333; /* 瓦片悬停（参考站原值） */
+  --infobox: rgba(0, 0, 0, .816); /* 参考站 .mp-infobox 原值 */
+
+  /* 强调与铜锈（参考站 CSS 原值） */
+  --accent: #CF8D2D;        /* 主强调（截图实测 h≈36°）—— 已定稿 */
+  --accent-hi: #E7A93C;     /* 派生：hover/聚焦 */
+  --accent-bar: #FF9E34;    /* 参考站轮播指示条原值 */
+  --copper: #B55829;        /* 参考站边框原值 */
+  --copper-deep: #B85600;   /* 参考站日期装饰线原值 */
+
+  /* 文字 */
+  --ink: #E7DBCF;           /* 正文暖米白（截图实测） */
+  --ink-2: #B7B19F;         /* 次级 */
+  --cream: #FFFDE9;         /* 瓦片标签（参考站原值） */
+  --muted: #888888;
+  --muted-en: #666666;      /* 瓦片英文标签（参考站原值） */
+
+  --line: rgba(181, 88, 41, .62);
+  --line-soft: rgba(255, 255, 255, .08);
+  --glow: 0 0 9px rgba(0, 0, 0, 1);
+
+  /* 字体：与参考站同栈（Noto Serif SC / Cinzel / Roboto Mono） */
+  --serif: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  --sans: "PingFang SC", "Helvetica Neue", "Microsoft YaHei", "WenQuanYi Micro Hei", sans-serif;
+  --mono: "Roboto Mono", ui-monospace, Consolas, monospace;
+  --latin: "Cinzel", var(--serif);
+
+  /* 形状：直角为主 + 一个签名圆角（参考站 .mp-infobox 原值 0 30px 0 0） */
+  --radius-signature: 0 30px 0 0;
+
+  /* ── 已定稿参数（website.md C-8b / C-9，2026-09-26 用户确认）── */
+  --hero-h: 380px;   /* Hero 高度 */
+  --veil: .92;       /* Hero 左侧遮罩强度 */
+  --scrim: .92;      /* 整站背景明暗（遮罩倍数） */
+  --bg-pos-x: 50%;   /* 背景位置 X */
+  --grain: 1;        /* 颗粒纹理 */
+  /* 背景图由 main.tsx 在运行时注入（用 import.meta.env.BASE_URL 拼相对路径，
+     这样挂在 /workspace/ 或 /site01/workspace/ 下都能找对）。缺图时退化为纯色。 */
+  --bg-img: none;
+}

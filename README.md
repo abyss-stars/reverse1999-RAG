@@ -15,7 +15,7 @@
 围绕《重返未来：1999》简体中文剧情文本做**带引用的问答**，检索结果由图谱（实体/关系）
 与向量混合召回，并支持按**游戏版本**筛选章节。
 
-已通过 10 题回归（`python scripts/smoke_test.py`），覆盖四类能力：
+已通过 10 题回归（`python scripts/smoke_test.py`），覆盖五类能力：
 
 | 类型 | 示例问题 | 表现 |
 |---|---|---|
@@ -33,7 +33,10 @@
 
 - **全部使用云端模型**：DeepSeek（抽取/回答）+ 阿里云百炼（Embedding / Rerank）
 - **只做简体中文**（`readable/story_reader_linked/zh-CN/`）
-- **不做防剧透** —— 直接用 LightRAG 原生 WebUI 问答，不自建前端
+- **不做防剧透** —— 索引里就是全部剧情，提问即可能刷到后文
+- **自建前端 + 薄服务层**（`web/` + `server/`，见「前端与薄服务层」一节）。
+  原生 `/workspace` 仍可用，但它做不到两件本项目需要的事：**按游戏版本/章节限定检索范围**、
+  **把五档预设做成可点选的档位**
 - 存储：**PostgreSQL 四件套**（单容器承担 KV / 向量 / 图 / 文档状态）
 
 ---
@@ -129,16 +132,33 @@ CHUNK_P_SIZE=2000
 ├── docker-compose.yml            # postgres + lightrag 编排
 ├── README.md                     # ← 本文件：简介与从零复现
 ├── AGENTS.md                     # 约定 / 坑 / 手册（动手前必读）
-├── 流程与架构.md                  # 分层架构、数据流、决策推导、里程碑
+├── 流程与架构.md                  # 分层架构、数据流、决策推导、里程碑（**本地文档，不入库**）
+├── website.md                    # 网站设计决策与验收：视觉参数、前后端契约、里程碑
 ├── docs/
-│   └── RAG选型报告.md             # 为什么选 LightRAG
+│   ├── RAG选型报告.md             # 为什么选 LightRAG
+│   └── 检索调参.md                # 五档预设参数是怎么标定的
 ├── pipeline/                     # 数据管线
 │   ├── chapter_index.py          #   语料目录 → state/chapter_index.json
 │   ├── build_inputs.py           #   语料 → data/cleaned/ + data/inputs/ + manifest
 │   ├── ingest.py                 #   灌库 / 看进度 / 回填 / 校验解析器
 │   ├── update_index.py           #   语料更新后的增量重索引（含布局熔断）
 │   ├── reindex.py                #   强制重灌指定章节（清洗逻辑变更后用）
-│   └── lib/lightrag_client.py    #   REST 客户端（纯标准库）
+│   └── lib/
+│       ├── lightrag_client.py    #   REST 客户端（纯标准库）
+│       └── query_planner.py      #   五档检索预设的**唯一真源**
+├── server/                       # 薄服务层（L3b）：版本过滤 + 生成 + 同源托管
+│   ├── app.py                    #   FastAPI 路由与请求体校验
+│   ├── filtering.py              #   上下文裁剪（纯逻辑，可单测）
+│   ├── generation.py             #   裁剪后的自定义生成
+│   ├── presets.py                #   从 pipeline 导入预设，保证同源
+│   ├── requirements.txt          #   精确钉版本（装在 server/.venv）
+│   ├── test_filtering.py         #   纯逻辑单测（不联网）
+│   └── test_service.py           #   集成测试（需服务在跑）
+├── web/                          # 前端：React 18 + Vite 6 + TS，手写 CSS 令牌
+│   ├── src/api/presets.ts        #   由 query_planner 生成，不进手改
+│   ├── src/styles/tokens.css     #   设计令牌唯一处（换肤只改这里）
+│   ├── scripts/verify-app.mjs    #   CDP 端到端验证（真起浏览器、轮询 DOM）
+│   └── public/                   #   背景图/台词数据等第三方素材（不进 git）
 ├── state/                        # 状态清单（进 git）
 │   ├── corpus.lock.json          #   语料 commit 锁定
 │   ├── chapter_index.json        #   81 章的序号/分类/标题/版本 + 来源
@@ -157,8 +177,14 @@ CHUNK_P_SIZE=2000
     ├── build-image.ps1           # 构建镜像（绕开 syntax 联网问题 + .sh 转 LF）
     ├── up.ps1 / down.ps1         # 启停
     ├── status.ps1 / logs.ps1     # 巡检 / 日志
-    └── smoke_test.py             # 回归题库
+    ├── smoke_test.py             # 回归题库
+    ├── preset_matrix.py          # 预设参数标定矩阵
+    └── gen_web_presets.py        # 预设 → web/src/api/presets.ts
 ```
+
+> **`流程与架构.md` 是本地文档，不在仓库里。** 它已被从 git 历史中彻底移除
+> （不只是加入 `.gitignore`），因此在新 clone 的仓库里不存在。
+> 想读的话只能在本机工作区看。其余文档均在库内。
 
 ---
 
@@ -297,6 +323,63 @@ python pipeline/ingest.py --backfill
 
 ---
 
+## 前端与薄服务层
+
+原生 `/workspace` 能用，但它**没有**两样本项目需要的能力：按游戏版本/章节限定检索范围、
+把五档检索预设做成可点选的档位。所以有了 `web/`（前端）+ `server/`（薄服务层）。
+
+**为什么必须要一层服务端**：LightRAG 的 `/query` 把**检索与生成绑在一起**，
+中间插不进过滤。所以过滤只能在服务层做 —— 拆成「取上下文 → 裁剪 → 自己生成」三段。
+不设过滤时则**原样透传** LightRAG 的流，以保住已被 `smoke_test.py` 验证过的生成质量。
+
+### 起三个进程
+
+```powershell
+# ① LightRAG 后端（:9621）—— 见上面「怎么跑」
+.\scripts\up.ps1
+
+# ② 薄服务层（:8787）—— 有自己的 venv，不要用全局 Python（全局有 9 处依赖冲突）
+python -m venv server\.venv
+server\.venv\Scripts\python.exe -m pip install -r server\requirements.txt
+server\.venv\Scripts\python.exe -m uvicorn server.app:app --host 127.0.0.1 --port 8787
+
+# ③ 前端（:5173）
+cd web; npm install; npm run dev
+```
+
+开发期 `/api` 由 Vite 代理到 :8787，全链路同源、不依赖 CORS。
+**上线**时 `web/dist` 由薄服务层一并托管（`server/app.py` 末尾的 `StaticFiles`），
+也是同源 —— 注意此时**不能**把前端挂进 LightRAG 容器的 `webui` 目录，
+那样它就调不到本服务的 `/api/*` 了（详见 `website.md` §8.4）。
+
+### 验证
+
+```powershell
+server\.venv\Scripts\python.exe server\test_filtering.py   # 纯逻辑单测（不联网）
+server\.venv\Scripts\python.exe server\test_service.py     # 集成测试（需 :9621 + :8787）
+node web\scripts\verify-app.mjs                            # 端到端：真起浏览器轮询 DOM
+python scripts\smoke_test.py                               # 整库 10 题验收
+```
+
+`verify-app.mjs` 用 CDP（不是 `--screenshot`，那会被定时器烧掉虚拟时钟）真起一个
+headless 浏览器、**轮询 DOM 直到回答落地**再断言，并留一张截图在 `docs/ref/`。
+它验的是"能力真的有"而不只是"返回 200"：引用卡默认最多 4 条、
+点正文里 >4 的角标能把对应卡片提升为可见。
+
+> **这里抓到一个真 bug（值得记下来）**：引用区默认只渲染前 4 条，
+> 但答案正文里可能写着 `[21]` —— 卡片不存在时点角标**毫无反应**。
+> 于是加了"点角标即临时提升该条为可见"。第一版在 `running` 由 true 变 false（流结束）
+> 时无条件清空提升状态，看起来没问题，但 E2E 偶发失败：答案落地后立刻点角标，
+> 提升被 completion 的那次重置抹掉了。根因是 `Page.captureScreenshot`
+> （整页截图，正文很长时很慢）阻塞渲染进程，把 React 的 passive effect 冲刷**推迟到了点击之后**。
+> 修法是只在"新一轮**开始**"时清状态，不在结束时清 —— 顺带修掉了
+> "流式过程中展开引用，答案一落地就被自动收起"这个真实可见的问题。
+> 教训：**探针的读数本身也要被怀疑**。中途我曾以为是 `Boolean(getElementById(...))`
+> 读不到 DOM 节点，专门写了个最小实验证明它是对的（存在→`{}`→true，不存在→`null`→false），
+> 才把方向转回代码。
+
+---
+
 ## 增量更新（游戏发新版本时）
 
 ```powershell
@@ -322,10 +405,14 @@ python pipeline/update_index.py --apply      # 执行
 ## 后续可做
 
 - **上服务器**：Nginx + TLS；迁移只需 `pg_dump` + `data/inputs/` + `state/`
-- **接上 UI**：直接用 LightRAG 原生 `/workspace`（问答）与 `/webui`（管理）；
-  想换品牌可用 `UI_TEMPLATES_DIR`（compose 已挂好 `./data/ui_templates`），**无需重建前端**
-- **检索预设**：已内置五档（精确定位 / 专名检索 / 关系链 / 广域扫掠 / 快速应答），
-  参数经实测标定。可显示在前端供用户选择，见 [`next.md`](next.md) 与 [`docs/检索调参.md`](docs/检索调参.md)
+- ~~接上 UI~~：**已完成** —— `web/` 自建前端 + `server/` 薄服务层，见「前端与薄服务层」。
+  原生 `/workspace` 与 `/webui` 仍保留可用（管理端在后者的图形界面里最方便）
+- ~~检索预设~~：**已完成** —— 五档预设已是前端可点选的档位，
+  参数唯一真源是 `pipeline/lib/query_planner.py`，前端契约由 `scripts/gen_web_presets.py` 生成
+- **KG 按章节过滤**：目前启用范围限定时会**整段丢弃图谱上下文**
+  （实体/关系行不带来源字段，无法按章节过滤）。彻底方案要按 DB 的
+  `lightrag_entity_chunks` + `lightrag_doc_chunks` 反查实体所属章节
+- **多轮对话**：现在是单轮问答，历史不进上下文
 
 ---
 
@@ -333,9 +420,10 @@ python pipeline/update_index.py --apply      # 执行
 
 | 范围 | 许可 / 归属 |
 |---|---|
-| **本仓库代码**（`pipeline/` `scripts/` `deploy/` 等） | [MIT](LICENSE) |
+| **本仓库代码**（`pipeline/` `scripts/` `deploy/` `server/` `web/src/` 等） | [MIT](LICENSE) |
 | **剧情文本** | 版权归其权利人所有。本仓库**不含**语料原文 —— 语料独立 clone 且被 `.gitignore` 排除，仅用于本地个人检索 |
 | **上游 LightRAG** | `LightRAG/` 为独立 clone，遵循其自身许可（MIT），不纳入本仓库 |
+| **第三方美术素材** | `web/public/bg/`（整站背景图）、`docs/ref/`（比对用截图）均为**官方美术资源**，被 `.gitignore` 排除、**不随仓库分发**，仅供本机自用。上线需换自制素材 —— 设计令牌见 [`website.md`](website.md) §3，换图只需改 `web/src/styles/tokens.css` 一处 |
 
 ---
 
@@ -345,6 +433,11 @@ python pipeline/update_index.py --apply      # 执行
 |---|---|
 | [`next.md`](next.md) | **接手必读**：当前状态、下一步该做什么、待决策问题 |
 | [`AGENTS.md`](AGENTS.md) | 操作铁律、环境修复记录、配置与行为坑、数据可信度、操作手册、已知未修问题 |
-| [`流程与架构.md`](流程与架构.md) | 分层架构、数据流、五个关键决策、部署形态、里程碑 M0-M8 |
+| [`website.md`](website.md) | 网站设计：视觉参数（已锁定）、前后端契约、验收标准、实施进度 |
 | [`docs/检索调参.md`](docs/检索调参.md) | 五个检索预设的参数是怎么标定的，以及怎么重新标定 |
 | [`docs/RAG选型报告.md`](docs/RAG选型报告.md) | 为什么选 LightRAG，与其他框架的对比 |
+| [`server/README.md`](server/README.md) | 薄服务层：为什么用 venv + FastAPI、接口契约、已知测量 |
+| [`web/README.md`](web/README.md) | 前端：怎么起、设计令牌在哪、为什么用 hash 路由 |
+
+> `流程与架构.md`（分层架构、五个关键决策、里程碑 M0-M8）**不入库**，
+> 只存在于本机工作区 —— 它已被从 git 历史中移除。

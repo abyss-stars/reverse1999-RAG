@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1999 剧情档案</title>
+  <meta name="description" content="《重返未来：1999》简体中文剧情检索 —— 本地索引，非官方" />
+  <meta name="theme-color" content="#1B1B1B" />
+
+  <!--
+    上线形态（website.md A2 = (b)）是把本产物挂进 LightRAG 容器的
+    /app/lightrag/api/webui，由后端替换下面这个占位注释，注入
+    window.__LIGHTRAG_CONFIG__ = { apiPrefix, webuiPrefix, webuiTitle }。
+    占位注释的名字必须与后端一致：lightrag_server.py 的 RUNTIME_CONFIG_PLACEHOLDER。
+  -->
+  <!-- __LIGHTRAG_RUNTIME_CONFIG__ -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;1,400&family=Noto+Serif+SC:wght@200;400;700;900&family=Roboto+Mono:wght@400&display=swap"
+  />
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
