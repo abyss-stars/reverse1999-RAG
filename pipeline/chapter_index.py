@@ -48,10 +48,12 @@ CHAPTER_META = CORPUS / "exports" / "chapter_metadata.json"
 OUT = ROOT / "state" / "chapter_index.json"
 
 # 分类显示名（用于元数据注释与文档）
+# 注意: build_inputs.py 会拼成 f"{label}剧情", 所以这里不要自带「剧情」后缀,
+# 否则角色分类会渲染成「角色剧情剧情」。
 CATEGORY_LABEL = {
     "mainline": "主线",
     "activity": "活动",
-    "character": "角色剧情",
+    "character": "角色",
     "anecdote": "轶事",
 }
 

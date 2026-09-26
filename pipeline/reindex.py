@@ -88,6 +88,18 @@ def resolve_targets(args, docs: dict) -> list[dict]:
 
 def main() -> int:
     args = parse_args()
+
+    if args.apply:
+        # 清单可能过期：build_inputs.py 只在清洗正文 sha256 未变时继承索引状态，
+        # 所以改了头部渲染之后，受影响章节的 lightrag_doc_id 会被清空。
+        # 若直接信任清单，就会「以为索引里没有这些文档」而跳过删除，
+        # 随后 scan 把它们判为 already processed 跳过 —— 整轮静默空转。
+        # 因此执行前先回填一次，让 doc_id 与实时索引对齐。
+        print("-> 先回填清单，确保 doc_id 与实时索引一致")
+        subprocess.run([sys.executable, str(ROOT / "pipeline" / "ingest.py"),
+                        "--backfill"], check=True)
+        print()
+
     docs = load_manifest()
     targets = resolve_targets(args, docs)
     if not targets:
@@ -108,20 +120,41 @@ def main() -> int:
         print(f"  将执行: 删除 {len(with_doc)} 个文档 → 铺入 {len(targets)} 章 → scan → backfill")
         return 0
 
+    if not with_doc:
+        print("\n[x] 中止：这些章节在实时索引里一个都找不到 doc_id。")
+        print("    扫描不会重灌已 PROCESSED 的文档，继续下去只会静默空转。")
+        print("    请先确认上面回填步骤的输出（是否 81/81 PROCESSED）。")
+        return 1
+
     cli = client()
 
     if with_doc:
         print(f"\n-> 删除 {len(with_doc)} 个已索引文档（保留抽取缓存）")
         ids = [t["doc_id"] for t in with_doc]
-        for i in range(0, len(ids), 20):
-            batch = ids[i:i + 20]
-            try:
-                cli.delete_document(batch, delete_file=False, delete_llm_cache=False)
-                print(f"   已提交 {i + len(batch)}/{len(ids)}")
-            except Exception as exc:  # noqa: BLE001
-                print(f"   [warn] 删除失败: {exc}")
-        print("-> 等待删除完成 ...")
-        cli.wait_for_idle(timeout=3600)
+        # 关键坑: LightRAG 的删除是「破坏性作业」，同一时刻只受理一个。
+        # 并发提交时后续请求会返回 **HTTP 200 + status="busy"** 而被静默拒绝
+        # （见 document_routes.py 的 DeleteDocResponse.status 定义），
+        # 不检查 status 就会误以为都提交成功了。
+        # 所以必须「提交一批 → 等该批删完 → 再提交下一批」。
+        batch_size = 20
+        for bi, i in enumerate(range(0, len(ids), batch_size), start=1):
+            batch = ids[i:i + batch_size]
+            total_batches = (len(ids) + batch_size - 1) // batch_size
+            for attempt in range(1, 11):
+                resp = cli.delete_document(batch, delete_file=False,
+                                           delete_llm_cache=False)
+                status = resp.get("status") if isinstance(resp, dict) else None
+                if status == "deletion_started":
+                    print(f"   批次 {bi}/{total_batches}: 受理 {len(batch)} 个")
+                    break
+                print(f"   批次 {bi}/{total_batches}: status={status!r} "
+                      f"未受理，等待空闲后重试 ({attempt}/10)")
+                cli.wait_for_idle(timeout=3600)
+            else:
+                print(f"   [x] 批次 {bi} 重试 10 次仍未被受理，中止（避免静默漏删）")
+                return 1
+            print(f"   -> 等待批次 {bi} 删除完成 ...")
+            cli.wait_for_idle(timeout=3600)
     else:
         print("\n-> 无需删除")
 

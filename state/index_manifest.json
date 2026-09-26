@@ -1,6 +1,6 @@
 {
   "format": "1999rag-index-manifest-v1",
-  "generated_at": "2026-09-26T04:10:01.479255+00:00",
+  "generated_at": "2026-09-26T05:22:05.896207+00:00",
   "lang": "zh-CN",
   "corpus": {
     "repo": "https://github.com/VioletWilde/Reverse1999-Story-Compendium",
@@ -25,7 +25,7 @@
   ],
   "counts": {
     "docs": 81,
-    "staged": 0,
+    "staged": 20,
     "by_category": {
       "mainline": 16,
       "activity": 23,
@@ -212,7 +212,7 @@
       "lightrag_doc_id": "doc-fdbd8e57202927434ecf3be111e6320a",
       "status": "PROCESSED",
       "chunks_count": 63,
-      "indexed_at": "2026-09-25T13:35:28.422638+00:00"
+      "indexed_at": "2026-09-26T04:39:25.417734+00:00"
     },
     "110-复乐园.md": {
       "chapter_no": "110",
@@ -248,7 +248,7 @@
       "lightrag_doc_id": "doc-b1d83a990ec20e683fa61a1ffa8cfb0f",
       "status": "PROCESSED",
       "chunks_count": 62,
-      "indexed_at": "2026-09-25T13:29:27.102781+00:00"
+      "indexed_at": "2026-09-26T04:42:15.937898+00:00"
     },
     "112-远征记.md": {
       "chapter_no": "112",
@@ -266,7 +266,7 @@
       "lightrag_doc_id": "doc-3a62056130681dff7b0ff472ee770f22",
       "status": "PROCESSED",
       "chunks_count": 82,
-      "indexed_at": "2026-09-25T13:38:38.910537+00:00"
+      "indexed_at": "2026-09-26T04:44:28.188337+00:00"
     },
     "113-他者的悲哀.md": {
       "chapter_no": "113",
@@ -284,7 +284,7 @@
       "lightrag_doc_id": "doc-b5bf7e16b7a7e38f1a97cdf542d5fff5",
       "status": "PROCESSED",
       "chunks_count": 75,
-      "indexed_at": "2026-09-25T13:43:56.950339+00:00"
+      "indexed_at": "2026-09-26T04:45:34.413288+00:00"
     },
     "114-应门者.md": {
       "chapter_no": "114",
@@ -302,7 +302,7 @@
       "lightrag_doc_id": "doc-594af1a97413e5b28de219dfc5a187c2",
       "status": "PROCESSED",
       "chunks_count": 69,
-      "indexed_at": "2026-09-25T13:41:58.734853+00:00"
+      "indexed_at": "2026-09-26T04:42:25.899219+00:00"
     },
     "313-船喻.md": {
       "chapter_no": "313",
@@ -482,7 +482,7 @@
       "lightrag_doc_id": "doc-3e1d18d194bb60d4abdc0e2e231ae948",
       "status": "PROCESSED",
       "chunks_count": 53,
-      "indexed_at": "2026-09-25T14:10:48.971398+00:00"
+      "indexed_at": "2026-09-26T04:47:12.586761+00:00"
     },
     "24101-地球上最后的夜晚.md": {
       "chapter_no": "24101",
@@ -536,7 +536,7 @@
       "lightrag_doc_id": "doc-fa4cb3f14595ffbd7c994a71fdf726a1",
       "status": "PROCESSED",
       "chunks_count": 54,
-      "indexed_at": "2026-09-25T14:11:20.039666+00:00"
+      "indexed_at": "2026-09-26T04:46:12.027962+00:00"
     },
     "28101-于洪流中.md": {
       "chapter_no": "28101",
@@ -554,7 +554,7 @@
       "lightrag_doc_id": "doc-04485ebd776aa37e907fa1068b556109",
       "status": "PROCESSED",
       "chunks_count": 1,
-      "indexed_at": "2026-09-25T14:10:50.977272+00:00"
+      "indexed_at": "2026-09-26T04:38:47.758751+00:00"
     },
     "31101-长夜鸣笛.md": {
       "chapter_no": "31101",
@@ -626,7 +626,7 @@
       "lightrag_doc_id": "doc-b515d054d639b549a93c2ef33c47ad55",
       "status": "PROCESSED",
       "chunks_count": 60,
-      "indexed_at": "2026-09-25T14:23:53.007510+00:00"
+      "indexed_at": "2026-09-26T04:40:25.728755+00:00"
     },
     "36101-人们向何处去.md": {
       "chapter_no": "36101",
@@ -680,7 +680,7 @@
       "lightrag_doc_id": "doc-923c23260fc61b667704a20ef329d309",
       "status": "PROCESSED",
       "chunks_count": 46,
-      "indexed_at": "2026-09-25T14:26:01.130606+00:00"
+      "indexed_at": "2026-09-26T04:39:48.849644+00:00"
     },
     "305101-翡冷翠之春.md": {
       "chapter_no": "305101",
@@ -698,7 +698,7 @@
       "lightrag_doc_id": "doc-62c56c4e91c2e5af157ff41fb1d35c71",
       "status": "PROCESSED",
       "chunks_count": 27,
-      "indexed_at": "2026-09-25T14:26:07.691623+00:00"
+      "indexed_at": "2026-09-26T04:44:43.292481+00:00"
     },
     "305201-入雅典记.md": {
       "chapter_no": "305201",
@@ -716,7 +716,7 @@
       "lightrag_doc_id": "doc-3879e52a57dded32652fdb30039c2d58",
       "status": "PROCESSED",
       "chunks_count": 20,
-      "indexed_at": "2026-09-25T14:27:06.280108+00:00"
+      "indexed_at": "2026-09-26T04:45:57.110696+00:00"
     },
     "385101-聚合浪潮.md": {
       "chapter_no": "385101",
@@ -734,7 +734,7 @@
       "lightrag_doc_id": "doc-e288010f5504a36cebc6b593ce65750b",
       "status": "PROCESSED",
       "chunks_count": 31,
-      "indexed_at": "2026-09-25T14:30:19.952842+00:00"
+      "indexed_at": "2026-09-26T04:46:57.624105+00:00"
     },
     "13904-凡人或英雄.md": {
       "chapter_no": "13904",
@@ -744,15 +744,15 @@
       "version": "1.3",
       "episodes": 8,
       "trails": 0,
-      "sha256": "cbdff46bfbded9b8793ebce7b803ed22ae23620c93e6e48c76c6f0f82f0b57b3",
-      "bytes": 69584,
+      "sha256": "d277607d3695182699e7254d0249d88b53981cb0f2acc27d14e13971c7a938fb",
+      "bytes": 69578,
       "source_rel": "character\\13904-凡人或英雄.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-26f2fc553468bc9d485a5b63a3589183",
       "status": "PROCESSED",
       "chunks_count": 17,
-      "indexed_at": "2026-09-25T14:27:55.690237+00:00"
+      "indexed_at": "2026-09-26T05:16:16.633036+00:00"
     },
     "13918-世界上最小的涟漪.md": {
       "chapter_no": "13918",
@@ -762,15 +762,15 @@
       "version": "1.3",
       "episodes": 8,
       "trails": 0,
-      "sha256": "2af6353bd439c5667994c9271fa5667e1b742e92581a0f0f5181888f6b27b3c3",
-      "bytes": 66888,
+      "sha256": "25ccfa216dc7a6e1877a87ccd618acd2bd25e9c156f6fe8b4c3cffe8ee72f03c",
+      "bytes": 66882,
       "source_rel": "character\\13918-世界上最小的涟漪.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-e214d9ef0bd8e01a2607ed69b60fdd7f",
       "status": "PROCESSED",
       "chunks_count": 18,
-      "indexed_at": "2026-09-25T14:27:55.689994+00:00"
+      "indexed_at": "2026-09-26T05:16:16.632812+00:00"
     },
     "14013-致曾年轻的天空.md": {
       "chapter_no": "14013",
@@ -780,15 +780,15 @@
       "version": "1.4",
       "episodes": 8,
       "trails": 0,
-      "sha256": "0927c382eef0e25a6ea5350d4af60a051b679868e6837a442ac2ed0cd01d81b7",
-      "bytes": 65241,
+      "sha256": "c68d85bdc62328275af431e71d7993b790a85f08b7599ca45c6020debd83c4c3",
+      "bytes": 65235,
       "source_rel": "character\\14013-致曾年轻的天空.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-4cb5e88166022f49a99dbc7c2b29e183",
       "status": "PROCESSED",
       "chunks_count": 16,
-      "indexed_at": "2026-09-25T14:31:02.764976+00:00"
+      "indexed_at": "2026-09-26T05:17:23.498988+00:00"
     },
     "14014-未誓者.md": {
       "chapter_no": "14014",
@@ -798,15 +798,15 @@
       "version": "1.4",
       "episodes": 8,
       "trails": 0,
-      "sha256": "54d82e41811962b754e5dc6f2c05b37ae830dad13bdcb9267d46c76f6c57535c",
-      "bytes": 61178,
+      "sha256": "dd04801e3d3bda24c561a6a1d7ee43dd522c86f5ca476b079ab3feb0ef9c88d8",
+      "bytes": 61172,
       "source_rel": "character\\14014-未誓者.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-4c817c128df3277615b76265091da35b",
       "status": "PROCESSED",
       "chunks_count": 16,
-      "indexed_at": "2026-09-25T14:30:18.596199+00:00"
+      "indexed_at": "2026-09-26T05:17:05.294884+00:00"
     },
     "16601-曲香蒙求.md": {
       "chapter_no": "16601",
@@ -816,15 +816,15 @@
       "version": "1.6",
       "episodes": 8,
       "trails": 0,
-      "sha256": "ad018be8ef97b0e37e151af360b9160aa2898bdf0e50e5c2b357e273dd59bb44",
-      "bytes": 85645,
+      "sha256": "43c551e5110ce2c465be6a1471c39562859ee0103f9a31e665aabd77a1fefd64",
+      "bytes": 85639,
       "source_rel": "character\\16601-曲香蒙求.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-7e7c7453fff740a855e943458d46ad92",
       "status": "PROCESSED",
       "chunks_count": 21,
-      "indexed_at": "2026-09-25T14:33:06.118830+00:00"
+      "indexed_at": "2026-09-26T05:16:26.994105+00:00"
     },
     "16603-天下有风.md": {
       "chapter_no": "16603",
@@ -834,15 +834,15 @@
       "version": "1.6",
       "episodes": 8,
       "trails": 0,
-      "sha256": "1cd4b26858cf3d07aa08ed320ee6cf755caa7b74a8162cf056ebc37b2c4c5ba6",
-      "bytes": 59350,
+      "sha256": "44c55a7b00d2fbed6cb72992e97acdce8680022c7ea6205a77de2557cb981e48",
+      "bytes": 59344,
       "source_rel": "character\\16603-天下有风.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-6cb236a901c579590c56b4108a6f347e",
       "status": "PROCESSED",
       "chunks_count": 15,
-      "indexed_at": "2026-09-25T14:31:29.281769+00:00"
+      "indexed_at": "2026-09-26T05:18:08.350527+00:00"
     },
     "17701-小房间.md": {
       "chapter_no": "17701",
@@ -852,15 +852,15 @@
       "version": "1.7",
       "episodes": 8,
       "trails": 0,
-      "sha256": "6886641ee3e2c21dd6d871331eb588cd131f9fce4d66c10b2e6e103d5e889543",
-      "bytes": 108847,
+      "sha256": "d9a37d63db0283a6f4d5e876c1e37926469dcce730ffa1e1998be0103007698d",
+      "bytes": 108841,
       "source_rel": "character\\17701-小房间.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-a4590acdc69edb92e4fa98e15fa27aca",
       "status": "PROCESSED",
       "chunks_count": 24,
-      "indexed_at": "2026-09-25T14:34:21.549579+00:00"
+      "indexed_at": "2026-09-26T05:17:46.229850+00:00"
     },
     "17703-灯塔集.md": {
       "chapter_no": "17703",
@@ -870,15 +870,15 @@
       "version": "1.7",
       "episodes": 8,
       "trails": 0,
-      "sha256": "9c5947a6fb6f52da3ee3e402cd34eab8413deca827aa6b5d2597f0bed123d762",
-      "bytes": 80487,
+      "sha256": "73d1fc6bc9815fcf12d54caef3de4c0618f5f9a9bd76009bfccaf5bfb7fa816f",
+      "bytes": 80481,
       "source_rel": "character\\17703-灯塔集.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-f5410e2d1f4d8edbee1cf449197d2d87",
       "status": "PROCESSED",
       "chunks_count": 17,
-      "indexed_at": "2026-09-25T14:32:05.210643+00:00"
+      "indexed_at": "2026-09-26T05:19:02.057544+00:00"
     },
     "18601-黎明依旧到来.md": {
       "chapter_no": "18601",
@@ -888,15 +888,15 @@
       "version": "1.8",
       "episodes": 8,
       "trails": 0,
-      "sha256": "610a7c1648d1819e17625ea648f3b6226839788e88b8212f8e70b71edc30014e",
-      "bytes": 62519,
+      "sha256": "dc81ce581e06fee89e81c5eb0e781f172e5e49526ef38943a7f50730947ae64b",
+      "bytes": 62513,
       "source_rel": "character\\18601-黎明依旧到来.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-4637e012ea1a96d5703da687a9d9cb5b",
       "status": "PROCESSED",
       "chunks_count": 15,
-      "indexed_at": "2026-09-25T14:34:28.914566+00:00"
+      "indexed_at": "2026-09-26T05:19:15.548557+00:00"
     },
     "18603-银线结.md": {
       "chapter_no": "18603",
@@ -906,15 +906,15 @@
       "version": "1.8",
       "episodes": 8,
       "trails": 0,
-      "sha256": "1efd001da4b18f7df093764e92dd8ee79f12861a3d630325855bb78d3a258b07",
-      "bytes": 83296,
+      "sha256": "a174e55107070012019fc5b83a0528d766617c97508da886717b75023ba6d042",
+      "bytes": 83290,
       "source_rel": "character\\18603-银线结.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-8c72e92461e60447f8f71066f0d143b9",
       "status": "PROCESSED",
       "chunks_count": 18,
-      "indexed_at": "2026-09-25T14:36:19.147371+00:00"
+      "indexed_at": "2026-09-26T05:17:52.702702+00:00"
     },
     "19601-飞渡往日.md": {
       "chapter_no": "19601",
@@ -924,15 +924,15 @@
       "version": "1.9",
       "episodes": 8,
       "trails": 0,
-      "sha256": "94177c5e125646ad953b00f3167522c1a70b09357071260c4e8f68e253c2f3fa",
-      "bytes": 74155,
+      "sha256": "a0fc7c1a0a4c29de90b76bbce69e58bca256856dbae46a6b1971cfcec6b2b585",
+      "bytes": 74149,
       "source_rel": "character\\19601-飞渡往日.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-60d37cab16695c46f868acc54452f472",
       "status": "PROCESSED",
       "chunks_count": 18,
-      "indexed_at": "2026-09-25T14:36:13.554954+00:00"
+      "indexed_at": "2026-09-26T05:19:38.080762+00:00"
     },
     "19603-犹在镜中.md": {
       "chapter_no": "19603",
@@ -942,15 +942,15 @@
       "version": "1.9",
       "episodes": 8,
       "trails": 0,
-      "sha256": "12e9cf96df3388174f1e766773895e9be06f9ffb54c869c5a87fa726855404d5",
-      "bytes": 70600,
+      "sha256": "e8ef1414948f85961874aa969e763524ed928e7b98a2528ab24b289b47a248c7",
+      "bytes": 70594,
       "source_rel": "character\\19603-犹在镜中.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-89f0c35527d960fdeafdd11c4168599f",
       "status": "PROCESSED",
       "chunks_count": 16,
-      "indexed_at": "2026-09-25T14:35:06.511194+00:00"
+      "indexed_at": "2026-09-26T05:20:44.351135+00:00"
     },
     "20601-旧金山小子.md": {
       "chapter_no": "20601",
@@ -960,15 +960,15 @@
       "version": "2.0",
       "episodes": 5,
       "trails": 0,
-      "sha256": "0486c930b9e747ee64948f4f49d045af14ccd9f1c7a8939667c1258cd4ceba04",
-      "bytes": 59167,
+      "sha256": "754cfd5c1016254235091f35a364fed3cc24066f06946f8b1cb1437fb2025e02",
+      "bytes": 59161,
       "source_rel": "character\\20601-旧金山小子.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-c40ef8f5ca0af5496bdf34bc8b246cdd",
       "status": "PROCESSED",
       "chunks_count": 15,
-      "indexed_at": "2026-09-25T14:36:51.847690+00:00"
+      "indexed_at": "2026-09-26T05:19:55.337872+00:00"
     },
     "20603-第一千夜.md": {
       "chapter_no": "20603",
@@ -978,15 +978,15 @@
       "version": "2.0",
       "episodes": 8,
       "trails": 0,
-      "sha256": "6d78374b6c11adec6085e70679a9c1dfb191816f29457aa5176ceed76da4ac17",
-      "bytes": 80536,
+      "sha256": "f85b68f41bde67b599ca3e4421a66965f8b75daac0fa28b5059f631f3e15957a",
+      "bytes": 80530,
       "source_rel": "character\\20603-第一千夜.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-acf28e2a7d94b74b8698ca85805bed73",
       "status": "PROCESSED",
       "chunks_count": 19,
-      "indexed_at": "2026-09-25T14:38:10.136102+00:00"
+      "indexed_at": "2026-09-26T05:20:43.597237+00:00"
     },
     "22911-向雨林深处.md": {
       "chapter_no": "22911",
@@ -996,15 +996,15 @@
       "version": "2.2",
       "episodes": 2,
       "trails": 0,
-      "sha256": "d646ec11f81f4815c112f2a479d636b5de004f015ec86584195e55f8ac07eb4b",
-      "bytes": 23849,
+      "sha256": "3228dd52bf4372b8267182f60b6aa51633369c9cae09741b0bf140629bea9efa",
+      "bytes": 23843,
       "source_rel": "character\\22911-向雨林深处.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-ccbf22376e3f41977f2951f06a405b4d",
       "status": "PROCESSED",
       "chunks_count": 5,
-      "indexed_at": "2026-09-25T14:37:00.332670+00:00"
+      "indexed_at": "2026-09-26T05:21:08.531535+00:00"
     },
     "23501-太阳的背面.md": {
       "chapter_no": "23501",
@@ -1014,15 +1014,15 @@
       "version": "2.3",
       "episodes": 8,
       "trails": 0,
-      "sha256": "ffef51317228e81b4f54c847298e4c25d807395d79a762fbb2ae02b59f7f209f",
-      "bytes": 46060,
+      "sha256": "f0b9da99e3b094ba714abb162df086b2adcc998fdaef1efa2d64e5e7ba3228c4",
+      "bytes": 46054,
       "source_rel": "character\\23501-太阳的背面.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-d63b6fa3d29d74656b1d1b297defc5a7",
       "status": "PROCESSED",
       "chunks_count": 11,
-      "indexed_at": "2026-09-25T14:38:16.785827+00:00"
+      "indexed_at": "2026-09-26T05:21:12.421824+00:00"
     },
     "23601-夜游十字街.md": {
       "chapter_no": "23601",
@@ -1032,15 +1032,15 @@
       "version": "2.3",
       "episodes": 8,
       "trails": 0,
-      "sha256": "dc464fb8025dce46f5fb832575a605bff5ddc1a088209e9c08237d09f84aa104",
-      "bytes": 66717,
+      "sha256": "e6f29e15ddac073fe19b40122d948ce567d3a62e25d8583d472c1570f641e4be",
+      "bytes": 66711,
       "source_rel": "character\\23601-夜游十字街.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-6b1680194dbc1e386a453db184aa68e3",
       "status": "PROCESSED",
       "chunks_count": 14,
-      "indexed_at": "2026-09-25T14:38:21.726397+00:00"
+      "indexed_at": "2026-09-26T05:21:30.748782+00:00"
     },
     "24501-河港与海之间.md": {
       "chapter_no": "24501",
@@ -1050,15 +1050,15 @@
       "version": "2.4",
       "episodes": 8,
       "trails": 0,
-      "sha256": "92e1f67ce4c1fe0a33e7b714051353c2866c295858350408a7710a9640abb795",
-      "bytes": 46078,
+      "sha256": "0308fc93f579e79f7c0ea073965fa769226220ae1f60e3623090fcfc1399b9fc",
+      "bytes": 46072,
       "source_rel": "character\\24501-河港与海之间.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-e5da5917b00840af02eec03063a6b2a9",
       "status": "PROCESSED",
       "chunks_count": 11,
-      "indexed_at": "2026-09-25T14:39:25.208448+00:00"
+      "indexed_at": "2026-09-26T05:21:52.657057+00:00"
     },
     "30601-三重赋格.md": {
       "chapter_no": "30601",
@@ -1068,15 +1068,15 @@
       "version": "3.0",
       "episodes": 8,
       "trails": 0,
-      "sha256": "340ec75ab89da6af9cd292874956016fe25d30495095eabc9a8f1fefb8a8f773",
-      "bytes": 58046,
+      "sha256": "0f0ae30576b09fd59b2c4ad0cf6d558d4f017d4019b241a717edb7d1d3fe1962",
+      "bytes": 58040,
       "source_rel": "character\\30601-三重赋格.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-2f68bcfca4467f669869e8e4c79bf041",
       "status": "PROCESSED",
       "chunks_count": 14,
-      "indexed_at": "2026-09-25T14:40:30.300294+00:00"
+      "indexed_at": "2026-09-26T05:21:47.875255+00:00"
     },
     "34601-打虎记.md": {
       "chapter_no": "34601",
@@ -1086,15 +1086,15 @@
       "version": "3.4",
       "episodes": 8,
       "trails": 0,
-      "sha256": "fdbe7566b5d30adad98c0a2cf1b107f839ceb1101ff18173d83adca2d034b7f0",
-      "bytes": 60340,
+      "sha256": "9ee2dab6bf92bf88c6f3bf9765f60bf3bcc9a3accbebee65b3b8c7b6a38bb9c5",
+      "bytes": 60334,
       "source_rel": "character\\34601-打虎记.md",
       "source_blob": null,
-      "staged": false,
+      "staged": true,
       "lightrag_doc_id": "doc-c483fb4d09e8918e10c2e6c119c378d7",
       "status": "PROCESSED",
       "chunks_count": 16,
-      "indexed_at": "2026-09-25T14:39:52.874768+00:00"
+      "indexed_at": "2026-09-26T05:22:03.626430+00:00"
     },
     "1901-奥利弗的故事.md": {
       "chapter_no": "1901",
@@ -1112,7 +1112,7 @@
       "lightrag_doc_id": "doc-d7eb677653a1263749d846f066932795",
       "status": "PROCESSED",
       "chunks_count": 8,
-      "indexed_at": "2026-09-25T14:40:08.673494+00:00"
+      "indexed_at": "2026-09-26T05:02:18.783188+00:00"
     },
     "1902-戏剧与戏剧.md": {
       "chapter_no": "1902",
@@ -1130,7 +1130,7 @@
       "lightrag_doc_id": "doc-86f367d3b9fc2bb7ab3937b235664a47",
       "status": "PROCESSED",
       "chunks_count": 8,
-      "indexed_at": "2026-09-25T14:40:55.315737+00:00"
+      "indexed_at": "2026-09-26T05:02:12.669067+00:00"
     },
     "1903-直到长夜下旬.md": {
       "chapter_no": "1903",
@@ -1148,7 +1148,7 @@
       "lightrag_doc_id": "doc-c0d1b81f4ea93904395c981b1b77a209",
       "status": "PROCESSED",
       "chunks_count": 9,
-      "indexed_at": "2026-09-25T14:39:12.726789+00:00"
+      "indexed_at": "2026-09-26T05:02:21.415517+00:00"
     },
     "1904-美梦后记.md": {
       "chapter_no": "1904",
@@ -1166,7 +1166,7 @@
       "lightrag_doc_id": "doc-79fe00759a0fb5b4269c2c2e441d05ab",
       "status": "PROCESSED",
       "chunks_count": 11,
-      "indexed_at": "2026-09-25T14:41:37.960604+00:00"
+      "indexed_at": "2026-09-26T05:03:02.957931+00:00"
     },
     "1905-庸碌喜剧.md": {
       "chapter_no": "1905",
@@ -1184,7 +1184,7 @@
       "lightrag_doc_id": "doc-50768a7a90a883f989061e3a06c28135",
       "status": "PROCESSED",
       "chunks_count": 15,
-      "indexed_at": "2026-09-25T14:42:02.786764+00:00"
+      "indexed_at": "2026-09-26T05:03:20.540743+00:00"
     },
     "1906-重返人间.md": {
       "chapter_no": "1906",
@@ -1202,7 +1202,7 @@
       "lightrag_doc_id": "doc-6baabf6a2d93c54615e136477aed4469",
       "status": "PROCESSED",
       "chunks_count": 8,
-      "indexed_at": "2026-09-25T14:41:33.976215+00:00"
+      "indexed_at": "2026-09-26T05:02:49.428773+00:00"
     },
     "1907-第九条美德.md": {
       "chapter_no": "1907",
@@ -1220,7 +1220,7 @@
       "lightrag_doc_id": "doc-9c6c23d60ee5cd00c1df9cdf49d0e73c",
       "status": "PROCESSED",
       "chunks_count": 11,
-      "indexed_at": "2026-09-25T14:42:56.675128+00:00"
+      "indexed_at": "2026-09-26T05:03:42.891489+00:00"
     },
     "1908-齿轮的意志.md": {
       "chapter_no": "1908",
@@ -1238,7 +1238,7 @@
       "lightrag_doc_id": "doc-00bfc765718d7afa92f7d2f278a170bd",
       "status": "PROCESSED",
       "chunks_count": 7,
-      "indexed_at": "2026-09-25T14:43:15.702878+00:00"
+      "indexed_at": "2026-09-26T05:04:54.904724+00:00"
     },
     "1909-致温妮弗雷德.md": {
       "chapter_no": "1909",
@@ -1256,7 +1256,7 @@
       "lightrag_doc_id": "doc-e0daadc1c444b3ef0717359953780d03",
       "status": "PROCESSED",
       "chunks_count": 15,
-      "indexed_at": "2026-09-25T14:43:27.014848+00:00"
+      "indexed_at": "2026-09-26T05:03:29.977608+00:00"
     },
     "1910-风吹乌哈拉.md": {
       "chapter_no": "1910",
@@ -1274,7 +1274,7 @@
       "lightrag_doc_id": "doc-4306942a1bb30e5dd64e87bf6f313acf",
       "status": "PROCESSED",
       "chunks_count": 20,
-      "indexed_at": "2026-09-25T14:45:47.203187+00:00"
+      "indexed_at": "2026-09-26T05:04:42.001070+00:00"
     },
     "1911-小春雀儿.md": {
       "chapter_no": "1911",
@@ -1292,7 +1292,7 @@
       "lightrag_doc_id": "doc-208fd53219dd14cb437f3b88035a707e",
       "status": "PROCESSED",
       "chunks_count": 8,
-      "indexed_at": "2026-09-25T14:43:39.525211+00:00"
+      "indexed_at": "2026-09-26T05:05:15.035213+00:00"
     },
     "1912-塞梅尔维斯.md": {
       "chapter_no": "1912",
@@ -1310,7 +1310,7 @@
       "lightrag_doc_id": "doc-a6a78aa3e520344afc9861e3d8d53842",
       "status": "PROCESSED",
       "chunks_count": 19,
-      "indexed_at": "2026-09-25T14:45:42.828356+00:00"
+      "indexed_at": "2026-09-26T05:05:04.902015+00:00"
     },
     "1916-权利归花儿.md": {
       "chapter_no": "1916",
@@ -1328,7 +1328,7 @@
       "lightrag_doc_id": "doc-ca13672b52a30fffbce2834948a9ca50",
       "status": "PROCESSED",
       "chunks_count": 6,
-      "indexed_at": "2026-09-25T14:46:28.479007+00:00"
+      "indexed_at": "2026-09-26T05:04:22.754460+00:00"
     },
     "1918-长夜未逝.md": {
       "chapter_no": "1918",
@@ -1346,7 +1346,7 @@
       "lightrag_doc_id": "doc-f26db81c2cbbe6e79194a761c534a58a",
       "status": "PROCESSED",
       "chunks_count": 4,
-      "indexed_at": "2026-09-25T14:44:21.245261+00:00"
+      "indexed_at": "2026-09-26T05:04:30.605371+00:00"
     },
     "1919-黄金与悲喜剧.md": {
       "chapter_no": "1919",
@@ -1364,7 +1364,7 @@
       "lightrag_doc_id": "doc-dc447684fa8c39cc7857f9b0472f940d",
       "status": "PROCESSED",
       "chunks_count": 11,
-      "indexed_at": "2026-09-25T14:45:50.287277+00:00"
+      "indexed_at": "2026-09-26T05:05:54.113811+00:00"
     },
     "1920-最佳乐队.md": {
       "chapter_no": "1920",
@@ -1382,7 +1382,7 @@
       "lightrag_doc_id": "doc-f5b606f6cf745048404f6fd68b894138",
       "status": "PROCESSED",
       "chunks_count": 15,
-      "indexed_at": "2026-09-25T14:47:25.336199+00:00"
+      "indexed_at": "2026-09-26T05:05:27.995398+00:00"
     },
     "1922-最后的电影.md": {
       "chapter_no": "1922",
@@ -1400,7 +1400,7 @@
       "lightrag_doc_id": "doc-096f1cf32b3e14907581d694a901c134",
       "status": "PROCESSED",
       "chunks_count": 12,
-      "indexed_at": "2026-09-25T14:46:58.438156+00:00"
+      "indexed_at": "2026-09-26T05:06:08.951882+00:00"
     },
     "1923-海风的往事.md": {
       "chapter_no": "1923",
@@ -1418,7 +1418,7 @@
       "lightrag_doc_id": "doc-898645b989483ba8db7f1030af5be77e",
       "status": "PROCESSED",
       "chunks_count": 11,
-      "indexed_at": "2026-09-25T14:48:24.094509+00:00"
+      "indexed_at": "2026-09-26T05:06:39.358032+00:00"
     },
     "1924-在路上.md": {
       "chapter_no": "1924",
@@ -1436,7 +1436,7 @@
       "lightrag_doc_id": "doc-090544cce53fed9980f32a111d5b7648",
       "status": "PROCESSED",
       "chunks_count": 16,
-      "indexed_at": "2026-09-25T14:48:47.928157+00:00"
+      "indexed_at": "2026-09-26T05:06:49.626098+00:00"
     },
     "1925-钻石游戏.md": {
       "chapter_no": "1925",
@@ -1454,7 +1454,7 @@
       "lightrag_doc_id": "doc-10ce4a1c4fb3192047dee386b5f864ea",
       "status": "PROCESSED",
       "chunks_count": 11,
-      "indexed_at": "2026-09-25T14:48:38.452521+00:00"
+      "indexed_at": "2026-09-26T05:06:39.357803+00:00"
     },
     "1933-流行于世界.md": {
       "chapter_no": "1933",
@@ -1472,7 +1472,7 @@
       "lightrag_doc_id": "doc-9b1364e15193f1745ddb576c297a1ba5",
       "status": "PROCESSED",
       "chunks_count": 10,
-      "indexed_at": "2026-09-25T14:49:03.727656+00:00"
+      "indexed_at": "2026-09-26T05:06:25.278779+00:00"
     },
     "1934-天真的预言.md": {
       "chapter_no": "1934",
@@ -1490,7 +1490,7 @@
       "lightrag_doc_id": "doc-e29761a69b24876382df52e4ceac16d0",
       "status": "PROCESSED",
       "chunks_count": 9,
-      "indexed_at": "2026-09-25T14:49:19.561628+00:00"
+      "indexed_at": "2026-09-26T05:07:12.556573+00:00"
     }
   }
 }
