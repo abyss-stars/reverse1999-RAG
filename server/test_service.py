@@ -177,7 +177,11 @@ def main() -> int:
     idx = get("/api/chapters")["chapters"]
     v10 = {x["filename"] for x in idx if x.get("version") == "1.0"}
     ref_files = {(r.get("file_path") or "").split("/")[-1] for r in (r2.get("references") or [])}
-    check("引用文件全部属于 v1.0", ref_files and ref_files <= v10, f"越界={sorted(ref_files - v10)}")
+    # `bool(ref_files) and ...` 而不是 `ref_files and ...`：后者在集合为空时返回的是**空集合**
+    # 本身（Python 的 `and` 返回操作数，不返回 bool），真值一样但类型是 `set[str] | bool`，
+    # 与 `check(cond: bool)` 的契约不符（Pylance/pyright 会报错）。原意就是
+    # 「至少有一条引用，且全部都落在 v1.0 章节里」，两个条件缺一不可。
+    check("引用文件全部属于 v1.0", bool(ref_files) and ref_files <= v10, f"越界={sorted(ref_files - v10)}")
     print(f"      v1.0 章节: {sorted(v10)}")
     print(f"      实际引用  : {sorted(ref_files)}")
 
