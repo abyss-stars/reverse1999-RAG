@@ -26,12 +26,12 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 # Windows 控制台默认 GBK（本机实测 `sys.stdout.encoding == 'gbk'`，代码页 936），
 # 打印中文会变成乱码 —— 这正是本脚本此前的输出全是乱码的原因。
 #
-# ⚠️ 这里**故意不抄**仓库其它脚本的 `hasattr(sys.stdout, "reconfigure")`：
-# hasattr 不给静态类型检查器做收窄，Pylance/pyright 会在那一行报
-# `reportAttributeAccessIssue`（`TextIO` 类型上没有 reconfigure）。
-# `isinstance(..., io.TextIOWrapper)` 既能收窄（typeshed 里 TextIOWrapper 有 reconfigure），
-# 运行时也更稳：stdout 被替换成非 TextIOWrapper（如 pytest 的捕获对象）时直接跳过，
-# 不会抛 AttributeError。
+# ⚠️ 用 `isinstance(sys.stdout, io.TextIOWrapper)` 而不是 `hasattr(sys.stdout, "reconfigure")`：
+# hasattr 不给静态类型检查器做收窄，Pylance/pyright 会报 `reportAttributeAccessIssue`
+# （`TextIO` 类型上没有 reconfigure）。isinstance 既能收窄（typeshed 里 TextIOWrapper 有
+# reconfigure），运行时也更稳：stdout 被替换成非 TextIOWrapper（如 pytest 的捕获对象）
+# 时直接跳过，不会抛 AttributeError。
+# （2026-09-27 起全仓 10 处 reconfigure 已统一成这个写法，改回去会让 pyright 重新报错。）
 if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
