@@ -35,8 +35,11 @@ npm run dev
 
 | 文件 | 生成方式 | 缺失时 |
 |---|---|---|
-| `public/bg/1999.jpg` | 手工放入（官方美术，仅本地自用） | 背景退化为纯色画布，功能不受影响 |
+| `public/bg/1999.webp` | 手工放入（官方美术，仅本地自用） | 背景退化为纯色画布，功能不受影响 |
 | `public/data/quotes.json` | `python scripts/gen_web_quotes.py` | hero 不显示今日台词 |
+
+换背景图只改 `src/main.tsx` 里的 `BG_FILE` 一处（路径相对**文档**解析，见该文件注释）；
+`public/bg/` 会被原样拷到产物根，所以图必须与 `index.html` 同级。
 
 `public/data/chapter_index.json` 已随仓库提供（来自 `state/chapter_index.json`），
 索引重建后需要重新拷贝；若接了薄服务层，也可以改从 `/api/chapters` 取。

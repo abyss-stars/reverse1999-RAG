@@ -13,6 +13,11 @@ import react from '@vitejs/plugin-react'
  * 但同源才是上线形态的真实行为。
  *
  * `base: './'` + 相对资源路径：产物可以挂在任意前缀下（`/workspace/`、`/site01/workspace/`）。
+ *
+ * ⚠️ 代价：`base: './'` 在 dev 下仍会让 `import.meta.env.BASE_URL` 取到 `/`，
+ * 产物里才是 `./` —— 即**同一个表达式在 dev 与产物里语义不同**。
+ * 所以凡是「拼出来的资源路径」都要用 `document.baseURI` 解析成绝对 URL 再用，
+ * 尤其 CSS 自定义属性里的 `url()`（它按**消费方样式表**的基准解析，不是按文档）。
  */
 export default defineConfig({
   plugins: [react()],
