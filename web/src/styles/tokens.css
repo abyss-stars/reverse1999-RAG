@@ -45,7 +45,9 @@
   --scrim: .92;      /* 整站背景明暗（遮罩倍数） */
   --bg-pos-x: 50%;   /* 背景位置 X */
   --grain: 1;        /* 颗粒纹理 */
-  /* 背景图由 main.tsx 在运行时注入（用 import.meta.env.BASE_URL 拼相对路径，
-     这样挂在 /workspace/ 或 /site01/workspace/ 下都能找对）。缺图时退化为纯色。 */
+  /* 背景图由 main.tsx 在运行时注入：它按 document.baseURI 解析成**绝对 URL**，
+     这样挂在 /workspace/ 或 /site01/workspace/ 下都能找对。缺图时退化为纯色。
+     注意：**不要在这里写相对 url()** —— 自定义属性里的相对地址按**消费方样式表**
+     解析（app.css 在产物里位于 /assets/），会被拼成 /assets/bg/… 而 404。 */
   --bg-img: none;
 }

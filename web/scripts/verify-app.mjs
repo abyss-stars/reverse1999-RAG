@@ -15,11 +15,21 @@
 
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
+/** 截图仍留在 docs/ref（人要看的）；它已被 .gitignore 忽略。 */
 const OUT_DIR = resolve(HERE, '..', '..', 'docs', 'ref')
+
+/**
+ * 浏览器的临时 profile 放**系统临时目录**，绝不能放 docs/ref。
+ * 它一次会落下 1,000+ 个文件、60+ MB（缓存/LevelDB/扩展数据），
+ * 虽被 .gitignore 忽略，但会把仓库树搞得极难收拾，且增删都慢。
+ * 固定路径是为了复用（热启动快）；要彻底清干净直接删这个目录即可。
+ */
+const PROFILE_DIR = resolve(tmpdir(), '1999rag-e2e-edge-profile')
 
 const argv = process.argv.slice(2)
 const arg = (name, fallback) => {
@@ -83,7 +93,7 @@ async function main() {
       '--disable-gpu',
       '--hide-scrollbars',
       `--remote-debugging-port=${PORT}`,
-      `--user-data-dir=${resolve(OUT_DIR, 'edge-profile')}`,
+      `--user-data-dir=${PROFILE_DIR}`,
       '--window-size=1440,1400',
       '--no-first-run',
       url,

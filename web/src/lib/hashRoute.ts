@@ -3,10 +3,11 @@ import { useEffect, useState } from 'react'
 /**
  * 极简 hash 路由。
  *
- * 为什么不用 react-router：上线形态（A2 = (b)）是把产物丢进 LightRAG 容器的
- * 静态目录，由 Starlette 的 StaticFiles 提供 —— 它**没有 SPA fallback**，
- * 任何 `/chapters` 这样的真实路径刷新都会 404。hash 路由天然免疫这个问题，
- * 也让包体少一个依赖。
+ * 为什么不用 react-router：上线形态由**薄服务层**用 Starlette 的 StaticFiles
+ * 一并托管产物（server/README.md「生产形态：同源托管」）—— StaticFiles
+ * **没有 SPA fallback**，任何 `/chapters` 这样的真实路径刷新都会 404。
+ * hash 路由天然免疫这个问题，也让包体少一个依赖。
+ * （A2 原定的"把产物挂进 LightRAG 容器 webui"在 L3b 下不成立，见 website.md §8.4。）
  *
  * 约定：#/  #/chapters  #/about，查询参数写在 hash 里（#/?q=…&preset=…）。
  */

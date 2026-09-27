@@ -19,10 +19,14 @@
   />
 
   <!--
-    上线形态是把本产物挂进 LightRAG 容器的
-    /app/lightrag/api/webui，由后端替换下面这个占位注释，注入
-    window.__LIGHTRAG_CONFIG__ = { apiPrefix, webuiPrefix, webuiTitle }。
-    占位注释的名字必须与后端一致：lightrag_server.py 的 RUNTIME_CONFIG_PLACEHOLDER。
+    上线形态（L3b）：本产物由**薄服务层**一并静态托管（server/README.md
+    「生产形态：同源托管」），前端只调它自己的 /api/*。
+    ⚠️ **不要挂进 LightRAG 容器的 webui 目录** —— 那样前端就调不到薄服务层了。
+
+    下面这个占位注释是 **(a) 形态（直连 LightRAG、不带薄服务层）** 的遗留兼容：
+    上游 lightrag_server.py 会替换它、注入 window.__LIGHTRAG_CONFIG__（占位名必须
+    与上游的 RUNTIME_CONFIG_PLACEHOLDER 完全一致）。当前形态下没有人替换它，
+    即**死代码**，保留只是为了让 (a) 形态仍可用。详见 website.md §8.4。
   -->
   <!-- __LIGHTRAG_RUNTIME_CONFIG__ -->
 

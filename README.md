@@ -494,7 +494,7 @@ python pipeline/update_index.py --apply      # 执行
 | **本仓库代码**（`pipeline/` `scripts/` `deploy/` `server/` `web/src/` 等） | [MIT](LICENSE) |
 | **剧情文本** | 版权归其权利人所有。本仓库**不含**语料原文 —— 语料独立 clone 且被 `.gitignore` 排除，仅用于本地个人检索 |
 | **上游 LightRAG** | `LightRAG/` 为独立 clone，遵循其自身许可（MIT），不纳入本仓库 |
-| **第三方美术素材** | `web/public/bg/`（整站背景图）、`docs/ref/`（比对用截图）均为**官方美术资源**，被 `.gitignore` 排除、**不随仓库分发**，仅供本机自用。上线需换自制素材 —— 换图只需改 [`web/src/styles/tokens.css`](web/src/styles/tokens.css) 一处 |
+| **第三方美术素材** | `web/public/bg/`（整站背景图）、`docs/ref/`（比对用截图）均为**官方美术资源**，被 `.gitignore` 排除、**不随仓库分发**，仅供本机自用。上线需换自制素材 —— 换图只需改 [`web/src/main.tsx`](web/src/main.tsx) 里的 `BG_FILE` 一处 |
 
 ---
 
