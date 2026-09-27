@@ -1,4 +1,4 @@
-import type { FC, ReactNode } from 'react'
+import type { FC } from 'react'
 import { MarkIcon } from './Icons'
 import { navigate } from '../lib/hashRoute'
 import type { Route } from '../lib/hashRoute'
@@ -117,5 +117,3 @@ export const Footer: FC<{ chapters: number | null; chunks: number | null; build:
     </div>
   </footer>
 )
-
-export const Layout: FC<{ children: ReactNode }> = ({ children }) => <div>{children}</div>

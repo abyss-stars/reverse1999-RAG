@@ -18,10 +18,17 @@ interface Props {
   state: AnswerState
   fileMap: Map<string, ChapterRecord> | null
   onAskChapter: (c: ChapterRecord) => void
-  onCiteNavigate?: () => void
+  /**
+   * 打开该引用所属章节在「章节档案」页的条目（跳过去并高亮）。
+   *
+   * 这是「引用可追溯」的落点：只给「就这一章提问」的话，用户能就这一章发问、
+   * 却没有任何入口去**看**这一章的档案（版本、来源、阅读顺序）。
+   * 可选：不传则不渲染这个按钮（章节页自己不需要它）。
+   */
+  onOpenChapter?: (c: ChapterRecord) => void
 }
 
-export const AnswerPanel: FC<Props> = ({ state, fileMap, onAskChapter }) => {
+export const AnswerPanel: FC<Props> = ({ state, fileMap, onAskChapter, onOpenChapter }) => {
   const [active, setActive] = useState<number | null>(null)
   const [showAllRefs, setShowAllRefs] = useState(false)
   /**
@@ -223,6 +230,7 @@ export const AnswerPanel: FC<Props> = ({ state, fileMap, onAskChapter }) => {
                 chapter={fileMap ? chapterForPath(fileMap, r.file_path) : undefined}
                 active={active === Number(r.reference_id)}
                 onAskChapter={onAskChapter}
+                onOpenChapter={onOpenChapter}
               />
             ))}
             {(hiddenCount > 0 || showAllRefs) && (
@@ -251,7 +259,8 @@ const RefCard: FC<{
   chapter: ChapterRecord | undefined
   active: boolean
   onAskChapter: (c: ChapterRecord) => void
-}> = ({ ref_, chapter, active, onAskChapter }) => {
+  onOpenChapter?: (c: ChapterRecord) => void
+}> = ({ ref_, chapter, active, onAskChapter, onOpenChapter }) => {
   const snippet = ref_.content?.find((c) => c && c.trim().length > 0)
   const n = Number(ref_.reference_id)
 
@@ -280,6 +289,16 @@ const RefCard: FC<{
           >
             就这一章提问
           </button>
+          {onOpenChapter && (
+            <button
+              type="button"
+              className="cite open-chapter"
+              style={{ marginLeft: 6, padding: '2px 8px' }}
+              onClick={() => onOpenChapter(chapter)}
+            >
+              在章节档案中查看
+            </button>
+          )}
         </>
       ) : (
         <>

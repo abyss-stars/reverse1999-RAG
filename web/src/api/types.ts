@@ -29,22 +29,11 @@ export interface ReferenceItem {
   content?: string[] | null
 }
 
-export interface QueryResponse {
-  response: string
-  references?: ReferenceItem[] | null
-  response_time?: number | null
-  /** false = 这段文字不是回答模型写的（无上下文兜底 / 调试输出）。UI 必须据此打标。 */
-  llm_generated: boolean
-}
-
-export interface HealthInfo {
-  status: string
-  core_version?: string
-  auth_mode?: string
-  webui_available?: boolean
-  webui_title?: string
-  configuration?: Record<string, unknown>
-}
+// 这里曾有 `QueryResponse`（/query 非流式契约）、`HealthInfo`（/api/health 契约）。
+// 两者都是**定义了没有任何消费方**的死类型，已删（2026-09-27）：
+// 前端只走 `/query/stream`（逐行 NDJSON，见下面的 StreamLine），从不调非流式 /query；
+// 后端探活由 scripts/verify-app.mjs、scripts/status.ps1 直接打 HTTP，不经过前端。
+// 需要这两个端点的契约时以 LightRAG/lightrag/api/routers/query_routes.py 与 server/app.py 为准。
 
 /** 薄服务层在流首行回报的过滤情况（透传时 active=false）。 */
 export interface FilterInfo {
@@ -77,8 +66,3 @@ export type StreamLine =
 
 /** 检索阶段（用于分段进度显示） */
 export type Stage = 'idle' | 'extracting' | 'retrieving' | 'reranking' | 'generating' | 'done' | 'error'
-
-export interface ProgressEvent {
-  stage: Stage
-  label: string
-}

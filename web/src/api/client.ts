@@ -1,4 +1,4 @@
-import type { FilterInfo, HealthInfo, ReferenceItem, StreamLine } from './types'
+import type { FilterInfo, ReferenceItem, StreamLine } from './types'
 
 declare global {
   interface Window {
@@ -42,17 +42,10 @@ export interface QueryFilter {
   max_order?: number | null
 }
 
-export function isFilterActive(f: QueryFilter | null | undefined): boolean {
-  if (!f) return false
-  return Boolean(
-    f.categories?.length ||
-      f.versions?.length ||
-      f.sources?.length ||
-      f.chapters?.length ||
-      f.min_order != null ||
-      f.max_order != null,
-  )
-}
+// 这里曾有 `isFilterActive()` 与 `health()` 两个导出，**全仓无人调用**，已删（2026-09-27）。
+// 判"范围是否生效"用的是 lib/chapter.ts 的 scopeActive()（那一份是按章节表算的，能顺带给出命中章数）；
+// 后端探活则由 scripts/verify-app.mjs、scripts/status.ps1 直接打 /api/health，
+// 不经过前端代码 —— 所以删掉它们不减少任何能力，前端本就不做健康指示。
 
 export class ApiError extends Error {
   constructor(message: string, readonly status?: number) {
@@ -68,12 +61,6 @@ async function readError(res: Response): Promise<string> {
   } catch {
     return res.statusText
   }
-}
-
-export async function health(signal?: AbortSignal): Promise<HealthInfo> {
-  const res = await fetch(`${apiBase()}/health`, { signal })
-  if (!res.ok) throw new ApiError(await readError(res), res.status)
-  return (await res.json()) as HealthInfo
 }
 
 export interface StreamHandlers {

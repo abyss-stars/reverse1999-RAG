@@ -1,10 +1,21 @@
-import { useMemo, useState, type FC } from 'react'
+import { useEffect, useMemo, useRef, useState, type FC } from 'react'
 import { CATEGORY_ORDER, VERSION_SOURCE_NOTE, questionForChapter, type ChapterRecord, type ChapterIndex } from '../lib/chapter'
 import { navigate } from '../lib/hashRoute'
 
 interface Props {
   index: ChapterIndex | null
   error: string | null
+  /**
+   * hash 里 `ch=` 带进来的**焦点**章号（引用卡的「在章节档案中查看」写它）。
+   * 注意它与首页的「检索范围」用的是同名参数，但**语义不同**：
+   * 这里只负责「选中并滚到这一章」，不参与本页的筛选器。
+   */
+  focusCh?: string
+}
+
+/** `?ch=` 也可能来自首页的范围参数（逗号分隔），这里只取第一个非空项当焦点。 */
+function firstChapterNo(raw: string | undefined): string | null {
+  return (raw ?? '').split(',').map((s) => s.trim()).find(Boolean) ?? null
 }
 
 const SOURCE_SHORT: Record<string, string> = {
@@ -20,11 +31,31 @@ function versionKey(v: string | null): number {
   return Number.isFinite(n) ? n : -1
 }
 
-export const Chapters: FC<Props> = ({ index, error }) => {
+export const Chapters: FC<Props> = ({ index, error, focusCh }) => {
+  const focus = firstChapterNo(focusCh)
   const [category, setCategory] = useState<string>('all')
   const [version, setVersion] = useState<string>('all')
   const [source, setSource] = useState<string>('all')
-  const [selected, setSelected] = useState<string | null>(null)
+  /** 初值就取焦点：直接带 ch= 进来时，详情面板要**首屏**就是展开的。 */
+  const [selected, setSelected] = useState<string | null>(focus)
+
+  /**
+   * 选中焦点章并把它滚进视野。
+   *
+   * 依赖里必须带 `index`：带 ch= 进来时章节表还在 fetch，卡片那时并不存在。
+   * 找不到卡片时**不置 focusDone**，这样索引到货后的下一次渲染还能再试一次。
+   * 不用 `scrollIntoView` —— 在 iframe 预览里会连带滚动外层框架（同 AnswerPanel 的取舍）。
+   */
+  const focusDone = useRef<string | null>(null)
+  useEffect(() => {
+    if (!focus || !index) return
+    setSelected((cur) => (cur === focus ? cur : focus))
+    if (focusDone.current === focus) return
+    const el = document.getElementById(`ch-${focus}`)
+    if (!el) return
+    focusDone.current = focus
+    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' })
+  }, [focus, index])
 
   const versions = useMemo(() => {
     if (!index) return []
@@ -119,6 +150,7 @@ export const Chapters: FC<Props> = ({ index, error }) => {
         {rows.map((c) => (
           <button
             key={c.chapter_no}
+            id={`ch-${c.chapter_no}`}
             type="button"
             className="chapter"
             aria-pressed={selected === c.chapter_no}

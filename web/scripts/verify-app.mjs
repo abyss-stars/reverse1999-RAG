@@ -104,14 +104,18 @@ async function main() {
   try {
     if (!(await waitForPort())) throw new Error('调试端口未就绪')
 
-    // 找到页面 target
+    // 找到页面 target。
+    // ⚠️ 这里必须按 `--base` 的主机名匹配，不能写死 'localhost'：
+    // 用 `--base http://127.0.0.1:8787`（产物形态）时页面 URL 里没有 'localhost'，
+    // 写死就会一直找不到 target 并报「没找到页面 target」—— 实测踩过。
+    const BASE_HOST = new URL(BASE).hostname
     let target = null
     for (let i = 0; i < 40 && !target; i++) {
       const list = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json()
-      target = list.find((t) => t.type === 'page' && t.url.includes('localhost'))
+      target = list.find((t) => t.type === 'page' && t.url.includes(BASE_HOST))
       if (!target) await sleep(500)
     }
-    if (!target) throw new Error('没找到页面 target')
+    if (!target) throw new Error(`没找到页面 target（按主机名 ${BASE_HOST} 匹配）`)
 
     const ws = new WebSocket(target.webSocketDebuggerUrl)
     await new Promise((res, rej) => {
@@ -247,6 +251,47 @@ async function main() {
     // 验收标准 6：窄屏无横向溢出
     checks.push([`无横向溢出（${WIDTH || '窗口'}px, scrollWidth ${sw} ≤ ${vw}）`, sw <= vw + 1])
 
+    // 引用卡 -> 章节档案的跳转（「引用可追溯」的落点）。
+    // **必须放在最后**：它会离开首页，之后就拿不到首页的 DOM 了。
+    // 复用前面的 refCount：一个引用都没有时（未检索到依据）本来就没有卡片，按设计跳过。
+    let nav = null
+    /** 跳转后的截图路径（只在真的点了按钮时才有值） */
+    let navShotPath = null
+    const navClicked = await evaluate(
+      `(() => { const b = document.querySelector('.ref .open-chapter'); if (!b) return null; b.click(); return b.textContent.trim() })()`,
+    )
+    if (!navClicked && Number(refCount) === 0) {
+      console.log('[i] 本次没有引用卡，跳过「引用卡 -> 章节档案」验证')
+    } else {
+      let state = {}
+      for (let i = 0; i < 20; i++) {
+        await sleep(300)
+        state = JSON.parse(
+          (await evaluate(
+            `JSON.stringify({
+               hash: location.hash,
+               num: document.querySelector('.chapter[aria-pressed="true"] .num')?.textContent || '',
+               detail: document.querySelector('.card.detail .q')?.textContent || '',
+               focused: document.activeElement?.id || ''
+             })`,
+          )) || '{}',
+        )
+        if (state.hash.includes('/chapters') && state.detail) break
+      }
+      nav = { ...state, clicked: navClicked }
+      checks.push([
+        `引用卡「${navClicked ?? '在章节档案中查看'}」-> 档案页高亮第 ${state.num || '?'} 章`,
+        Boolean(state.hash?.startsWith('#/chapters')) &&
+          Boolean(state.num) &&
+          String(state.detail).includes(String(state.num)),
+        `hash=${state.hash} num=${state.num} detail=${state.detail}`,
+      ])
+      // 给「跳过去并高亮」留一张视觉证据（人要看的），与首页那张分开存
+      const navShot = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })
+      navShotPath = resolve(OUT_DIR, 'app-e2e-chapters.png')
+      writeFileSync(navShotPath, Buffer.from(navShot.result.data, 'base64'))
+    }
+
     console.log('\n=== 断言 ===')
     let failed = 0
     for (const [name, ok, extra] of checks) {
@@ -268,6 +313,8 @@ async function main() {
     console.log(`  引用卡 id   : 点前 ${idsBefore}`)
     if (promo.length) console.log(`               点后 ${idsAfter}`)
     console.log(`  首条引用    : ${firstRefWhere}`)
+    if (nav) console.log(`  引用->档案  : 点了「${nav.clicked}」 hash=${nav.hash} 高亮=${nav.num || '无'}`)
+    if (navShotPath) console.log(`  档案页截图  : ${navShotPath}`)
     if (errBox) console.log(`  错误框      : ${String(errBox).replace(/\s+/g, ' ')}`)
     if (scopeReport) console.log(`  范围回报    : ${String(scopeReport).replace(/\s+/g, ' ')}`)
     if (refFiles) console.log(`  引用文件    : ${String(refFiles).split('|').join(', ')}`)

@@ -62,7 +62,9 @@ export default function App() {
             initialScope={initialScope}
           />
         )}
-        {route.name === 'chapters' && <Chapters index={index} error={indexError} />}
+        {route.name === 'chapters' && (
+          <Chapters index={index} error={indexError} focusCh={route.query.get('ch') ?? ''} />
+        )}
         {route.name === 'about' && <About chapters={index?.total ?? null} presetSource="pipeline/lib/query_planner.py" />}
       </main>
 

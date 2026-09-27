@@ -37,12 +37,8 @@ export const VERSION_SOURCE_NOTE: Record<string, string> = {
 
 export const CATEGORY_ORDER = ['mainline', 'activity', 'character', 'anecdote'] as const
 
-export function categoryLabel(idx: ChapterIndex, key: string): string {
-  return idx.chapters.find((c) => c.category === key)?.category_label ?? key
-}
-
-/** `101-在我们的时代里.md` → 与 chapter_index 的 filename 对齐。 */
-export function fileBase(filePath: string): string {
+/** `101-在我们的时代里.md` → 与 chapter_index 的 filename 对齐。（只在本模块内用） */
+function fileBase(filePath: string): string {
   const noDir = filePath.replace(/\\/g, '/').split('/').pop() ?? filePath
   return noDir.trim()
 }

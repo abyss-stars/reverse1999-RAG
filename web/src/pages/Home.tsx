@@ -59,6 +59,15 @@ export const Home: FC<Props> = ({ index, fileMap, quotes, initialQuestion, initi
     submit(q, 'lookup', scope)
   }
 
+  /**
+   * 打开章节档案并高亮该章（引用卡上的「在章节档案中查看」）。
+   *
+   * 用 `ch=` 而不是别的参数名：章节页只把它当**焦点**读，不参与筛选，
+   * 所以这里不会影响档案页自己的三个筛选器状态。同时它也与首页「检索范围」
+   * 用的同一个参数名一致 —— 分享链接不会因为两个页面语义不同而互相污染。
+   */
+  const openChapter = (c: ChapterRecord) => navigate(`/chapters?ch=${encodeURIComponent(c.chapter_no)}`)
+
   return (
     <>
       <Hero quote={quoteOfDay(quotes)} chapters={index?.total ?? null} />
@@ -95,7 +104,7 @@ export const Home: FC<Props> = ({ index, fileMap, quotes, initialQuestion, initi
 
         <ScopeFilter index={index} value={scope} onChange={setScope} disabled={state.running} />
 
-        <AnswerPanel state={state} fileMap={fileMap} onAskChapter={askChapter} />
+        <AnswerPanel state={state} fileMap={fileMap} onAskChapter={askChapter} onOpenChapter={openChapter} />
 
         {!state.running && state.stage === 'idle' && (
           <p className="empty">
