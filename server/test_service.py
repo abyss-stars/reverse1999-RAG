@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import pathlib
 import ssl
@@ -21,6 +22,18 @@ import urllib.request
 
 # 让脚本两种跑法都能 import server.*（仓库根或 server/ 下直接跑）
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+
+# Windows 控制台默认 GBK（本机实测 `sys.stdout.encoding == 'gbk'`，代码页 936），
+# 打印中文会变成乱码 —— 这正是本脚本此前的输出全是乱码的原因。
+#
+# ⚠️ 这里**故意不抄**仓库其它脚本的 `hasattr(sys.stdout, "reconfigure")`：
+# hasattr 不给静态类型检查器做收窄，Pylance/pyright 会在那一行报
+# `reportAttributeAccessIssue`（`TextIO` 类型上没有 reconfigure）。
+# `isinstance(..., io.TextIOWrapper)` 既能收窄（typeshed 里 TextIOWrapper 有 reconfigure），
+# 运行时也更稳：stdout 被替换成非 TextIOWrapper（如 pytest 的捕获对象）时直接跳过，
+# 不会抛 AttributeError。
+if isinstance(sys.stdout, io.TextIOWrapper):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 BASE = "http://127.0.0.1:8787"
 CTX = ssl.create_default_context()

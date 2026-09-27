@@ -1,0 +1,44 @@
+{
+  // Pylance（VS Code 内）与 `npx pyright`（命令行）都会读这份配置。
+  // 目的：让 Problems 面板里**只剩真问题** —— 现在它把两类"不是 bug 的东西"也报成 error，
+  // 一类是本文件 extraPaths/ignore 解决的**导入解析假象**，另一类是 typeshed 口径问题
+  // （见 docs/开发手册02-速查参考.md §12）。改这份文件后请用
+  // `npx pyright` 复核（不带参数 = 按本配置扫全仓）。
+  //
+  // 注意：本文件允许注释（pyright 按 JSONC 解析），但**不要**在这里写 Python 侧的口径约定。
+
+  // 只看我们自己的代码。LightRAG/ 是上游 vendored 仓库（它有自己的配置与依赖），
+  // data/ 与 corpus/ 是数据与第三方语料，都不属于本项目的类型边界。
+  //
+  // ⚠️ `server/.venv` 必须显式排除：它**位于 `server/` 之下**，而下面的 include 写了
+  // `server` —— 不排的话 pyright 会把 venv 里的 typing_extensions / pip / pydantic
+  // 一起当源码分析（实测 1149 个 error 里 1140 个来自 site-packages）。
+  // `venvPath`/`venv` 只负责**解析导入**，不负责排除。
+  "include": ["server", "pipeline", "scripts"],
+  "exclude": ["LightRAG", "data", "corpus", "state", "server/.venv"],
+
+  // ⚠️ 这里**故意不写 `venvPath`/`venv`**：本仓库有**两套解释器** ——
+  // `server/.venv` 只给薄服务层（AGENTS.md §0.3），`pipeline/` 与 `scripts/` 走全局 Python
+  // （全局装了 Pillow，venv 里没有）。钉死任一方都会让另一半误报，实测：
+  // 钉 `server/.venv` → `scripts/probe_wiki_palette.py` 多报 2 条
+  // `Import "PIL" could not be resolved`（19 errors vs 17）。
+  // 交给 VS Code 里选中的解释器 / pyright 自动探测即可。
+  "pythonVersion": "3.12",
+
+  // 这些脚本靠**运行时** sys.path.insert 找同目录/同级模块（各文件开头都有那两行，
+  // 注释写的是"让脚本两种跑法都能 import server.*"），静态分析器不知道，于是误报
+  // reportMissingImports。把真实存在的两个目录显式加进来：
+  //   pipeline      → 支持 `from lib.lightrag_client import ...`（pipeline/*.py）
+  //   pipeline/lib  → 支持 `import query_planner` / `from lightrag_client import ...`
+  "extraPaths": ["pipeline", "pipeline/lib"],
+
+  // scripts/probe_llm_extra.py 是**容器内专用**探针：它 import lightrag.*，
+  // 而 lightrag 只装在 Docker 镜像里、本地（含 server/.venv）没有这个包 ——
+  // 本地无论如何解析不了，故整文件排除，而不是把 reportMissingImports 降级
+  // （降级会把"本地模块名打错"这类真问题一起藏掉）。
+  "ignore": ["scripts/probe_llm_extra.py"],
+
+  // basic = VS Code 里 Pylance 的默认档。别擅自升到 strict：
+  // 本项目没有全面标注类型，升档会淹掉真问题。
+  "typeCheckingMode": "basic"
+}
