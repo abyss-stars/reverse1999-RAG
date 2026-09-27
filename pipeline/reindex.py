@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import io
 import subprocess
 import sys
 from pathlib import Path
@@ -27,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "state" / "index_manifest.json"
 
-if hasattr(sys.stdout, "reconfigure"):
+if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 

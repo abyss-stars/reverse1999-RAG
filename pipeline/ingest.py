@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import io
 import sys
 import time
 from datetime import datetime, timezone
@@ -29,7 +30,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.lightrag_client import LightRAGClient, LightRAGError  # noqa: E402
 
-if hasattr(sys.stdout, "reconfigure"):
+if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(__file__).resolve().parent.parent

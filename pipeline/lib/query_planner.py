@@ -253,9 +253,10 @@ def describe() -> str:
 
 if __name__ == "__main__":
     import json
+    import io
     import sys
 
-    if hasattr(sys.stdout, "reconfigure"):
+    if isinstance(sys.stdout, io.TextIOWrapper):
         sys.stdout.reconfigure(encoding="utf-8")
 
     argv = sys.argv[1:]

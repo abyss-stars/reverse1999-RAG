@@ -30,13 +30,14 @@ version 的解析顺序（见 resolve_version）:
 from __future__ import annotations
 
 import json
+import io
 import re
 import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import unquote
 
-if hasattr(sys.stdout, "reconfigure"):
+if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 # ---------------------------------------------------------------- 路径常量

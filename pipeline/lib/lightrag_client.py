@@ -19,6 +19,7 @@ lightrag_client.py — LightRAG Server REST API 的最小客户端 (纯标准库
 from __future__ import annotations
 
 import json
+import io
 import sys
 import time
 import urllib.error
@@ -27,7 +28,7 @@ from typing import Any
 
 # Windows 控制台默认 GBK, 打印中文会变成乱码。库被 import 时顺手修好,
 # 这样所有调用方的 inline 脚本都不必各自 reconfigure。
-if hasattr(sys.stdout, "reconfigure"):
+if isinstance(sys.stdout, io.TextIOWrapper):
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:

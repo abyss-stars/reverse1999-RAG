@@ -16,6 +16,7 @@ preset_matrix.py — 预设参数标定矩阵
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import statistics
 import sys
@@ -27,7 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "pipeline" / "lib"))
 from query_planner import PRESETS, PRESET_ORDER, plan  # noqa: E402
 
-if hasattr(sys.stdout, "reconfigure"):
+if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 # 每个预设的代表性问题（即前端上用户会点这个预设来问的那类问题）

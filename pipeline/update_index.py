@@ -45,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import io
 import re
 import subprocess
 import sys
@@ -62,7 +63,7 @@ CHAPTER_RE = re.compile(r"^(mainline|activity|character|anecdote)[/\\](\d+)-(?:.
 
 sys.path.insert(0, str(ROOT / "pipeline"))
 sys.path.insert(0, str(ROOT / "pipeline" / "lib"))
-if hasattr(sys.stdout, "reconfigure"):
+if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 

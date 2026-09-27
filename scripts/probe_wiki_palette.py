@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import colorsys
+import io
 import sys
 from collections import Counter
 
@@ -136,7 +137,7 @@ def write_swatch() -> None:
 
 
 def main() -> None:
-    if hasattr(sys.stdout, "reconfigure"):
+    if isinstance(sys.stdout, io.TextIOWrapper):
         sys.stdout.reconfigure(encoding="utf-8")  # 避免 Windows 控制台把中文打成乱码
 
     if "--swatch" in sys.argv:

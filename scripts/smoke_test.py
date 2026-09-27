@@ -23,6 +23,7 @@ smoke_test.py — 剧情 RAG 验收回归
 from __future__ import annotations
 
 import argparse
+import io
 import sys
 import time
 from pathlib import Path
@@ -31,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "pipeline"))
 from lib.lightrag_client import LightRAGClient, LightRAGError  # noqa: E402
 
-if hasattr(sys.stdout, "reconfigure"):
+if isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 CASES = [
