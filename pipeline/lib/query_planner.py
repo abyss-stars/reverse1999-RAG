@@ -54,6 +54,7 @@ LightRAG 的 `/query` 有 20 个查询期参数，但实测下来只有 `mode` �
 from __future__ import annotations
 
 from dataclasses import dataclass, field, asdict
+from typing import Any
 
 # ---------------------------------------------------------------- 预设定义
 # 字段分三组：
@@ -224,7 +225,12 @@ def for_ui() -> list[dict]:
     out = []
     for name in PRESET_ORDER:
         p = PRESETS[name]
-        item = {"name": name}
+        # ⚠️ 必须显式标注：`{"name": name}` 不标注会被推成 `dict[str, str]`，
+        # 而 `p`（来自 `PRESETS: dict[str, dict]`）取出来的是 Unknown —— 于是
+        # 下一行的 `item.update({k: p.get(k) …})` 与 `item["params"] = {…}`
+        # 都会报 reportArgumentType。标注成 `dict[str, Any]` 后三处一起消失。
+        # 只影响静态检查，运行时行为完全不变（改前改后 `--json` 输出逐字节相同）。
+        item: dict[str, Any] = {"name": name}
         item.update({k: p.get(k) for k in _UI_FIELDS})
         item["params"] = {k: p[k] for k in _PARAM_FIELDS}
         item["params"].update(p.get("extra", {}))
