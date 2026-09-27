@@ -77,15 +77,22 @@ def git(*args: str, check: bool = True) -> str:
 
 
 def list_chapters(ref: str) -> dict[str, str]:
-    """返回 {相对路径(反斜杠): blob SHA}，只保留符合当前命名规范的章节。"""
-    raw = git("ls-tree", "-r", ref, "--", ZH_SUBPATH)
+    """返回 {相对路径(反斜杠): blob SHA}，只保留符合当前命名规范的章节。
+
+    ⚠️ `-z` 不能去掉：git 默认 `core.quotePath=true`，会把**非 ASCII 路径**输出成
+    `"activity/11101-\\351\\233\\267..."`（加双引号 + 八进制转义），于是下面那句
+    `path.startswith(prefix)` 全线落空 —— 实测对锁定版本 f6e18439 返回 **0 条**（应为 81 条），
+    后果是 `compute_plan` 判出 `deleted: 81`、`layout_guard` 误报「上游改了目录布局，请全量重建」。
+    与 `build_inputs.git_blob_map()` 是同一处坑（AGENTS §6 问题 1，2026-09-27 一并修）。
+    """
+    raw = git("ls-tree", "-r", "-z", ref, "--", ZH_SUBPATH)
     out: dict[str, str] = {}
     prefix = ZH_SUBPATH + "/"
-    for line in raw.splitlines():
-        parts = line.split("\t")
-        if len(parts) != 2:
+    # `-z` 的分隔符是 NUL，每条记录形如 `<mode> SP <type> SP <object>\t<path>`
+    for rec in raw.split("\0"):
+        if not rec:
             continue
-        meta, path = parts
+        meta, _sep, path = rec.partition("\t")
         fields = meta.split()
         if len(fields) < 3 or not path.startswith(prefix):
             continue
