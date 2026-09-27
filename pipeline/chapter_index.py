@@ -19,13 +19,16 @@ README 条目格式:
     source_rel / filename / episodes / trails / version / version_source
 
 version 的解析顺序（见 resolve_version）:
-    1. metadata    —— corpus/exports/chapter_metadata.json 的字段，最权威
-                      但按标题 join，81 章只覆盖 25 章
-    2. 主线对照表  —— MAINLINE_VERSION，补 metadata 缺失的主线/特别篇
-                      （灰机 wiki 逐章实测，共 5 章）
-    3. 编号规则    —— 活动/角色/轶事的章节号前两位即版本
-                      活动 15/15 已验证；角色/轶事无权威字段可校验，置信度较低
-    version_source 字段记录每章来自哪一档，便于按可信度筛选/复核。
+    1. metadata          —— corpus/exports/chapter_metadata.json 的字段，最权威
+                           但按标题 join，81 章只覆盖 25 章
+    2. 主线对照表        —— MAINLINE_VERSION，补 metadata 缺失的主线/特别篇
+                           （灰机 wiki 逐章实测 5 章）
+    3. 主线附属          —— 同表，但依据只是"附属关系 + 阅读顺序"（313 船喻，1 章）。
+                           wiki 与 metadata 都查不到它，故单独记 mainline_attached，
+                           **不要**混进上面那 5 章的 wiki 档
+    4. 编号规则          —— 活动/角色/轶事的章节号前两位即版本
+                           活动 15/15 已验证；角色/轶事无权威字段可校验，置信度较低
+    version_source 字段记录每章来自哪一档，便于按可信度筛选/复核（AGENTS §3）。
 """
 from __future__ import annotations
 
@@ -114,13 +117,23 @@ MAINLINE_VERSION = {
     "112": "3.3",
     "113": "3.7",
     "114": "4.0",
-    # 313 特别篇《船喻》：阅读顺序在 114《应门者》(4.0) 之后，即排在 4.0 之后。
-    # 但灰机 wiki 无独立页面(404)、chapter_metadata.json 无条目、正文亦不含版本信息，
-    # 三个源都空 -> 保持 None，不猜。
+    # 313 特别篇《船喻》：语料阅读顺序在 114《应门者》(4.0) 之后（order=16）。
+    # 2026-09-27 经用户确认它是「与 星 同类的主线附属章节」，据此记 4.0。
+    # ⚠️ 依据与上表其它行**不同档**：灰机 wiki 无条目页(404)、无「X.Y版本」句式、
+    #    chapter_metadata.json 247 条里查无 313 —— 唯一依据是「附属关系 + 阅读顺序」。
+    #    复核证据（2026-09-27）：wiki 数据页 `小径/船喻`（200）内嵌全章节阅读顺序表，
+    #    序列结尾为 `… 聚合浪潮 → 重燃！流金之海 → 应门者 → 船喻`；该页**不含版本字样**。
+    #    所以来源标成 mainline_attached，而不是 wiki（见 AGENTS §3 的可信度分档）。
+    "313": "4.0",
     # 注: 31X 是"特别篇"编号（310=星 的 ordinal 为 5SP，跟随第5章）。
     #     313 的 31 与主线第 13 章同形，但语料已明确它排在 114 之后，
     #     故不能套用"跟随第 X 章"的读法反推版本。
 }
+
+# 在 MAINLINE_VERSION 里、但依据是「附属关系 / 阅读顺序」而非 wiki 版本句式的章号。
+# 单独列出来是为了让 version_source 如实反映可信度（AGENTS §3 按档筛选），
+# 而不是把"推断值"混进 wiki 实测那一档。
+MAINLINE_ATTACHED = {"313"}
 
 # 活动 / 角色 / 轶事的章节号前两位编码版本：20101 -> 2.0，1901 -> 1.9，
 # 305101 -> 3.0。已验证：活动章节 15/15 与权威字段全部吻合。
@@ -139,14 +152,17 @@ def derive_version(chapter_no: str, category: str) -> str | None:
 def resolve_version(ch: dict, meta: dict | None) -> tuple[str | None, str | None]:
     """按可信度依次解析版本，并返回来源以便追溯。
 
-    1. metadata    —— 游戏自身导出字段，最权威
-    2. 主线对照表  —— 灰机 wiki 实测，补 metadata 缺失的主线/特别篇
-    3. 编号规则    —— 仅活动/角色/轶事
+    1. metadata          —— 游戏自身导出字段，最权威
+    2. wiki              —— 灰机 wiki 逐章实测，补 metadata 缺失的主线/特别篇
+    3. mainline_attached —— 主线附属章节：只由"附属关系 + 阅读顺序"定版，
+                            来源仍是 MAINLINE_VERSION 表，但依据弱于 wiki 实测（见 AGENTS §3）
+    4. number_rule       —— 仅活动/角色/轶事
     """
     if meta and meta.get("version"):
         return meta["version"], "metadata"
     if ch["chapter_no"] in MAINLINE_VERSION:
-        return MAINLINE_VERSION[ch["chapter_no"]], "wiki"
+        source = "mainline_attached" if ch["chapter_no"] in MAINLINE_ATTACHED else "wiki"
+        return MAINLINE_VERSION[ch["chapter_no"]], source
     derived = derive_version(ch["chapter_no"], ch["category"])
     if derived:
         return derived, "number_rule"
@@ -272,7 +288,8 @@ def main() -> int:
     resolved = len(chapters) - by_source.get("unresolved", 0)
     print(f"  版本解析: {resolved}/{len(chapters)} 章已确定")
     for src_name, label in (("metadata", "metadata 字段"),
-                            ("wiki", "主线对照表(灰机 wiki)"),
+                            ("wiki", "主线对照表(灰机 wiki 实测)"),
+                            ("mainline_attached", "主线附属(依附属关系推断)"),
                             ("number_rule", "章节号编号规则"),
                             ("unresolved", "未确定")):
         if by_source.get(src_name):

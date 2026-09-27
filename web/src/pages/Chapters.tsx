@@ -18,12 +18,15 @@ function firstChapterNo(raw: string | undefined): string | null {
   return (raw ?? '').split(',').map((s) => s.trim()).find(Boolean) ?? null
 }
 
+/** 版本来源筛选的短标签。顺序 = 可信度顺序（与后端 by_source 的分档一致）。 */
 const SOURCE_SHORT: Record<string, string> = {
   metadata: 'metadata（最权威）',
   wiki: 'wiki（逐章实测）',
+  mainline_attached: '主线附属（推断）',
   number_rule: 'number_rule（置信度较低）',
   null: '无来源',
 }
+const SOURCE_FILTERS = ['metadata', 'wiki', 'mainline_attached', 'number_rule', 'null']
 
 function versionKey(v: string | null): number {
   if (!v) return -1
@@ -135,7 +138,7 @@ export const Chapters: FC<Props> = ({ index, error, focusCh }) => {
         <button type="button" aria-pressed={source === 'all'} onClick={() => setSource('all')}>
           全部
         </button>
-        {['metadata', 'wiki', 'number_rule', 'null'].map((s) => (
+        {SOURCE_FILTERS.map((s) => (
           <button key={s} type="button" aria-pressed={source === s} onClick={() => setSource(s)}>
             {SOURCE_SHORT[s]}
           </button>

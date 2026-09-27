@@ -31,6 +31,7 @@ export interface ChapterIndex {
 export const VERSION_SOURCE_NOTE: Record<string, string> = {
   metadata: '游戏自身导出字段，最权威',
   wiki: '灰机 wiki 逐章实测，三方互证',
+  mainline_attached: '主线附属章节：按附属关系与阅读顺序定版，wiki/metadata 均无版本字段',
   number_rule: '章节号前两位规则；活动已验证，角色/轶事置信度较低',
   null: '无任何来源，未猜',
 }

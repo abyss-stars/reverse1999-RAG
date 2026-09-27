@@ -269,8 +269,8 @@
       "exists": true,
       "bytes": 59968,
       "ordinal": null,
-      "version": null,
-      "version_source": null
+      "version": "4.0",
+      "version_source": "mainline_attached"
     },
     {
       "order": 17,
