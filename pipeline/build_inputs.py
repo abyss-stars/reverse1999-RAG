@@ -41,6 +41,7 @@ import hashlib
 import json
 import re
 import shutil
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -122,24 +123,39 @@ def git_blob_map(commit: str) -> dict[str, str]:
     blob SHA 是权威且精确的：同一个 blob 就是同一份源文件。
     """
     try:
+        # ⚠️ `-z` 不能去掉：git 默认 `core.quotePath=true`，会把**非 ASCII 路径**输出成
+        # `"readable/.../11101-\351\233\267..."`（加双引号 + 八进制转义），于是下面那句
+        # `path.startswith(prefix)` 全线落空 —— 实测 82 行里只有纯 ASCII 名的
+        # `README.md` 能过，`source_blob` 对 81 章**全是 null**。
+        # `-z` 是 NUL 分隔且永不加引号（写 `-c core.quotePath=false` 也能修这一处，
+        # 但 `-z` 连"路径里有换行/引号"那一类也一并免疫）。
         r = subprocess.run(
-            ["git", "-C", str(CORPUS), "ls-tree", "-r", commit, "--",
+            ["git", "-C", str(CORPUS), "ls-tree", "-r", "-z", commit, "--",
              "readable/story_reader_linked/zh-CN"],
             capture_output=True, text=True, encoding="utf-8", errors="replace",
             timeout=60,
         )
-    except Exception:
+    except Exception as e:
+        # ⚠️ 这里**必须把原因打出来**，不能静默返回 {}：
+        # 本函数曾经因为文件顶部漏了 `import subprocess` 而抛 NameError，
+        # 被这个 except 吞掉 → 返回空 map → 调用方只看到一句笼统的
+        # 「取不到 blob SHA」，于是 source_blob 长期是 null 而没人知道为什么
+        # （AGENTS §6 问题 1，2026-09-27 才定位）。
+        print(f"  [warn] git ls-tree 调用失败（blob SHA 取不到）: {type(e).__name__}: {e}")
         return {}
     if r.returncode != 0:
+        err = [ln for ln in (r.stderr or "").splitlines() if ln.strip()]
+        print(f"  [warn] git ls-tree 退出码 {r.returncode}"
+              f"（blob SHA 取不到）: {err[-1] if err else '(无 stderr)'}")
         return {}
 
     prefix = "readable/story_reader_linked/zh-CN/"
     m: dict[str, str] = {}
-    for line in r.stdout.splitlines():
-        parts = line.split("\t")
-        if len(parts) != 2:
+    # `-z` 的分隔符是 NUL，每条记录形如 `<mode> SP <type> SP <object>\t<path>`
+    for rec in r.stdout.split("\0"):
+        if not rec:
             continue
-        meta, path = parts
+        meta, _sep, path = rec.partition("\t")
         fields = meta.split()
         if len(fields) < 3 or not path.startswith(prefix):
             continue
