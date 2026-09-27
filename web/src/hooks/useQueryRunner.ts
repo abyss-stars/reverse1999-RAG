@@ -106,6 +106,9 @@ export function useQueryRunner() {
       let text = ''
       let refs: ReferenceItem[] = []
       let gotError: string | null = null
+      // 后端自报的生成耗时（流里那帧 response_time）。**必须传 onDone 才会被填**，
+      // 否则恒为 null，AnswerPanel 里「后端 X.XXs」两个分支就永远不渲染。
+      let responseTime: number | null = null
 
       try {
         await streamQuery(
@@ -142,6 +145,9 @@ export function useQueryRunner() {
             onError: (msg) => {
               gotError = msg
             },
+            onDone: (info) => {
+              responseTime = info.responseTime ?? null
+            },
           },
           ac.signal,
         )
@@ -155,6 +161,7 @@ export function useQueryRunner() {
           text,
           refs,
           elapsed,
+          responseTime,
           running: false,
           stage: 'done',
           ungrounded: looksUngrounded(answer, refs.length),

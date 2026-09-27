@@ -8,7 +8,7 @@ import { SearchIcon } from '../components/Icons'
 import { useQueryRunner } from '../hooks/useQueryRunner'
 import { navigate } from '../lib/hashRoute'
 import type { ChapterRecord, ChapterIndex, ScopeFilter as Scope } from '../lib/chapter'
-import type { Quote } from '../lib/quote'
+import { quoteOfDay, type Quote } from '../lib/quote'
 
 interface Props {
   index: ChapterIndex | null
@@ -61,7 +61,7 @@ export const Home: FC<Props> = ({ index, fileMap, quotes, initialQuestion, initi
 
   return (
     <>
-      <Hero quote={quotes.length ? quotes[new Date().getDate() % quotes.length] : null} chapters={index?.total ?? null} />
+      <Hero quote={quoteOfDay(quotes)} chapters={index?.total ?? null} />
 
       <div className="wrap">
         <section className="search">

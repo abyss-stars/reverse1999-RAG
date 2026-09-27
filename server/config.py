@@ -45,7 +45,8 @@ LLM_MODEL = get("QUERY_LLM_MODEL") or get("LLM_MODEL", "deepseek-flash")
 LLM_TIMEOUT = float(get("LLM_TIMEOUT", "180"))
 
 # —— 薄服务层自己 ——
-SANDBOX_PORT = int(get("SANDBOX_PORT", "8787"))
+# 端口**不在这里配**：监听端口由 `uvicorn --port` 决定（见 .vscode/tasks.json ②、
+# server/README.md）。曾有一个 SANDBOX_PORT 常量，全仓无人读取、改了也不生效，已删。
 # 允许把 LightRAG 的 KG 段保留下来（默认在启用过滤时丢弃，理由见 filtering.py）
 KEEP_KG_DEFAULT = get("SANDBOX_KEEP_KG", "false").lower() in ("1", "true", "yes")
 
